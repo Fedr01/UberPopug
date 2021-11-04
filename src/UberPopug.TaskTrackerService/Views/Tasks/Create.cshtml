@@ -1,0 +1,15 @@
+@model UberPopug.TaskTrackerService.Tasks.Task
+
+@{
+    ViewBag.Title = "Tracker - new task";
+    Layout = "_Layout";
+}
+
+<h2>New task</h2>
+<form>
+    <div class="form-group">
+        <label for="exampleInputEmail1">Description</label>
+        <input asp-for="Description" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter description">
+    </div>
+    <button type="submit" asp-controller="Tasks" asp-action="Create" class="btn btn-primary">Create</button>
+</form>

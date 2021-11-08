@@ -15,5 +15,10 @@ namespace UberPopug.TaskTrackerService.Tasks
         public User User { get; set; }
 
         public string UserEmail { get; set; }
+
+        public void AssignTo(User user)
+        {
+            UserEmail = user.Email;
+        }
     }
 }

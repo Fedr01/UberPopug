@@ -1,6 +1,7 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using Confluent.Kafka;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
@@ -45,6 +46,8 @@ namespace UberPopug.TaskTrackerService
                 {
                     options.Cookie.SameSite = SameSiteMode.Unspecified;
                     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                    options.AccessDeniedPath = "";
+                    options.LoginPath = "";
                 })
                 .AddOpenIdConnect(options =>
                 {
@@ -70,6 +73,9 @@ namespace UberPopug.TaskTrackerService
                     options.SaveTokens = true;
 
                     options.Scope.Add("tracker");
+                    options.Scope.Add("roles");
+                    options.ClaimActions.MapJsonKey("role", "role", "role");
+                    options.TokenValidationParameters.RoleClaimType = "role";
                 });
 
             var clientConfig = new ClientConfig()
@@ -107,9 +113,9 @@ namespace UberPopug.TaskTrackerService
                 MinimumSameSitePolicy = SameSiteMode.Unspecified,
                 Secure = CookieSecurePolicy.Always
             });
-            
+
             dataContext.Database.Migrate();
-            
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

@@ -1,11 +1,4 @@
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using Confluent.Kafka;
-using IdentityServer4;
-using IdentityServer4.Models;
-using IdentityServer4.Services;
-using IdentityServer4.Test;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -13,9 +6,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using UberPopug.AuthService.Authentication;
 using UberPopug.Common.Interfaces;
 using UberPopug.Common.Producer;
-using Secret = IdentityServer4.Models.Secret;
 
 namespace UberPopug.AuthService
 {
@@ -37,16 +30,17 @@ namespace UberPopug.AuthService
             services.AddControllersWithViews();
 
             var builder = services.AddIdentityServer(options =>
-            {
-                options.Events.RaiseErrorEvents = true;
-                options.Events.RaiseInformationEvents = true;
-                options.Events.RaiseFailureEvents = true;
-                options.Events.RaiseSuccessEvents = true;
+                {
+                    options.Events.RaiseErrorEvents = true;
+                    options.Events.RaiseInformationEvents = true;
+                    options.Events.RaiseFailureEvents = true;
+                    options.Events.RaiseSuccessEvents = true;
 
-                // see https://identityserver4.readthedocs.io/en/latest/topics/resources.html
-                options.EmitStaticAudienceClaim = true;
-            });
-           //     .AddProfileService<UsersService>();
+                    // see https://identityserver4.readthedocs.io/en/latest/topics/resources.html
+                    options.EmitStaticAudienceClaim = true;
+                })
+                
+                .AddProfileService<ProfileService>();
 
             // in-memory, code config
             builder.AddInMemoryIdentityResources(Config.IdentityResources);
@@ -86,7 +80,7 @@ namespace UberPopug.AuthService
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AuthDbContext dataContext)
-        { 
+        {
             dataContext.Database.Migrate();
 
             if (env.IsDevelopment())
@@ -102,18 +96,6 @@ namespace UberPopug.AuthService
             app.UseIdentityServer();
             app.UseAuthorization();
             app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
-        }
-    }
-
-    public class UsersService : IProfileService
-    {
-        public async Task GetProfileDataAsync(ProfileDataRequestContext context)
-        {
-        }
-
-        public Task IsActiveAsync(IsActiveContext context)
-        {
-            throw new System.NotImplementedException();
         }
     }
 }

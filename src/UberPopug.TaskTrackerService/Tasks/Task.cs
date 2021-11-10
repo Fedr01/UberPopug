@@ -6,19 +6,33 @@ namespace UberPopug.TaskTrackerService.Tasks
 {
     public class Task
     {
-        public Guid Id { get; set; }
+        public Task(string description)
+        {
+            Description = description;
+            PublicId = Guid.NewGuid();
+            Status = TaskStatus.InProgress;
+        }
 
-        public string Description { get; set; }
+        public int Id { get; private set; }
 
-        public TaskStatus Status { get; set; }
+        public Guid PublicId { get; private set; }
 
-        public User User { get; set; }
+        public string Description { get; private set; }
 
-        public string UserEmail { get; set; }
+        public TaskStatus Status { get; private set; }
+
+        public User User { get; private set; }
+
+        public string AssignedToEmail { get; private set; }
 
         public void AssignTo(User user)
         {
-            UserEmail = user.Email;
+            AssignedToEmail = user.Email;
+        }
+
+        public void Complete()
+        {
+            Status = TaskStatus.Completed;
         }
     }
 }

@@ -1,43 +1,33 @@
 ﻿using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using UberPopug.Common.Interfaces;
 
 namespace UberPopug.Common.Producer
 {
-    /// <summary>
-    /// Base class for implementing Kafka Producer.
-    /// </summary>
-    /// <typeparam name="TKey">Indicates message's key in Kafka topic</typeparam>
-    /// <typeparam name="TValue">Indicates message's value in Kafka topic</typeparam>
-    public class KafkaProducer<TKey, TValue> : IDisposable, IKafkaProducer<TKey,TValue> where TValue : class
+    public class KafkaProducer : IDisposable, IKafkaProducer
     {
-        private readonly IProducer<TKey, TValue> _producer;
+        private readonly IProducer<long, string> _producer;
 
-        /// <summary>
-        /// Initializes the producer
-        /// </summary>
-        /// <param name="config"></param>
         public KafkaProducer(ProducerConfig config)
         {
-            _producer = new ProducerBuilder<TKey, TValue>(config).SetValueSerializer(new KafkaSerializer<TValue>()).Build();
+            _producer = new ProducerBuilder<long, string>(config)
+                .SetKeySerializer(Serializers.Int64)
+                .SetValueSerializer(Serializers.Utf8)
+                .Build();
         }
 
-        /// <summary>
-        /// Triggered when the service creates Kafka topic.
-        /// </summary>
-        /// <param name="topic">Indicates topic name</param>
-        /// <param name="key">Indicates message's key in Kafka topic</param>
-        /// <param name="value">Indicates message's value in Kafka topic</param>
-        /// <returns></returns>
-        public async Task ProduceAsync(string topic,TKey key, TValue value)
+
+        public async Task ProduceAsync(string topic, object value)
         {
-            await _producer.ProduceAsync(topic, new Message<TKey, TValue> { Key = key, Value = value });
+            await _producer.ProduceAsync(topic, new Message<long, string>
+            {
+                Key = DateTime.UtcNow.Ticks,
+                Value = JsonSerializer.Serialize(value)
+            });
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         public void Dispose()
         {
             _producer.Flush();

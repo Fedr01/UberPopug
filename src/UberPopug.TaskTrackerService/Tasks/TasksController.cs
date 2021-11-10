@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -7,21 +5,22 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+
 namespace UberPopug.TaskTrackerService.Tasks
 {
     [Authorize]
     public class TasksController : Controller
     {
-        private readonly TaskTrackerDbContext _context;
+        private readonly ITasksManager _tasksManager;
 
-        public TasksController(TaskTrackerDbContext context)
+        public TasksController(ITasksManager tasksManager)
         {
-            _context = context;
+            _tasksManager = tasksManager;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var tasks = _context.Tasks.ToList();
+            var tasks = await _tasksManager.GetAllAsync();
             return View(tasks);
         }
 
@@ -30,33 +29,22 @@ namespace UberPopug.TaskTrackerService.Tasks
             return View("Create");
         }
 
-        public IActionResult Create(Task task)
+        public async Task<IActionResult> Create(CreateTaskCommand command)
         {
-            _context.Tasks.Add(task);
-            
-            var users = _context.Users.ToList();
-            var random = new Random();
-            var assignedTo = users[random.Next(0, users.Count)];
-            task.AssignTo(assignedTo);
-            
-            _context.SaveChanges();
+            await _tasksManager.CreateAsync(command);
+            return RedirectToAction("Index");
+        }
+
+        public async Task<IActionResult> Complete(int taskId)
+        {
+            await _tasksManager.CompleteAsync(taskId);
             return RedirectToAction("Index");
         }
 
         [Authorize(Roles = "Admin")]
-        public IActionResult AssignTasks()
+        public async Task<IActionResult> AssignTasks()
         {
-            var tasks = _context.Tasks.ToList();
-            var users = _context.Users.ToList();
-
-            var random = new Random();
-            foreach (var task in tasks)
-            {
-                var assignedTo = users[random.Next(0, users.Count)];
-                task.AssignTo(assignedTo);
-            }
-
-            _context.SaveChanges();
+            var tasks = await _tasksManager.AssignAllAsync();
             return View("Index", tasks);
         }
 

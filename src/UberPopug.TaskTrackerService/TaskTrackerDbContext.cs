@@ -31,7 +31,7 @@ namespace UberPopug.TaskTrackerService
             modelBuilder.Entity<Task>()
                 .HasOne(t => t.User)
                 .WithMany()
-                .HasForeignKey(f => f.UserEmail);
+                .HasForeignKey(f => f.AssignedToEmail);
 
             base.OnModelCreating(modelBuilder);
         }

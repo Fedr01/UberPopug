@@ -1,10 +1,10 @@
 using UberPopug.Common;
 
-namespace UberPopug.TaskTrackerService.Users
+namespace UberPopug.TaskTrackerService.Users.Messages
 {
-    public class CreateUserCommand : Command
+    public class UserCreatedEvent : Event
     {
-        public CreateUserCommand(string email, Role role) : base("users")
+        public UserCreatedEvent(string email, Role role) : base("users")
         {
             Email = email;
             Role = role;

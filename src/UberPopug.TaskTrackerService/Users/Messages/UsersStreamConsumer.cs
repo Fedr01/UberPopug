@@ -6,12 +6,13 @@ using Microsoft.Extensions.Hosting;
 using UberPopug.Common.Constants;
 using UberPopug.Common.Interfaces;
 
-namespace UberPopug.TaskTrackerService.Users
+namespace UberPopug.TaskTrackerService.Users.Messages
 {
-	public class RegisterUserConsumer : BackgroundService
+	public class UsersStreamConsumer : BackgroundService
 	{
-		private readonly IKafkaConsumer<string, CreateUserCommand> _consumer;
-		public RegisterUserConsumer(IKafkaConsumer<string, CreateUserCommand> kafkaConsumer)
+		private readonly IKafkaConsumer<string, UserCreatedEvent> _consumer;
+		
+		public UsersStreamConsumer(IKafkaConsumer<string, UserCreatedEvent> kafkaConsumer)
 		{
 			_consumer = kafkaConsumer;
 		}
@@ -19,11 +20,11 @@ namespace UberPopug.TaskTrackerService.Users
 		{
 			try
 			{
-				await _consumer.StartConsumingAsync(KafkaTopics.CreateUser, stoppingToken);
+				await _consumer.StartConsumingAsync(KafkaTopics.UsersStream, stoppingToken);
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"{(int)HttpStatusCode.InternalServerError} ConsumeFailedOnTopic - {KafkaTopics.CreateUser}, {ex}");
+				Console.WriteLine($"{(int)HttpStatusCode.InternalServerError} ConsumeFailedOnTopic - {KafkaTopics.UsersStream}, {ex}");
 			}
 		}
 

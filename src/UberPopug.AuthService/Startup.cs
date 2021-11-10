@@ -67,7 +67,7 @@ namespace UberPopug.AuthService
 
             services.AddSingleton(producerConfig);
             services.AddSingleton(consumerConfig);
-            services.AddSingleton(typeof(IKafkaProducer<,>), typeof(KafkaProducer<,>));
+            services.AddSingleton<IKafkaProducer, KafkaProducer>();
 
             services.AddControllersWithViews();
 

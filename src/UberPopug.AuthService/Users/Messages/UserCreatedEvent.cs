@@ -2,9 +2,9 @@ using UberPopug.Common;
 
 namespace UberPopug.AuthService.Users.Messages
 {
-    public class CreateUserCommand : Command
+    public class UserCreatedEvent : Event
     {
-        public CreateUserCommand(string email, Role role) : base("users")
+        public UserCreatedEvent(string email, Role role) : base(nameof(UserCreatedEvent))
         {
             Email = email;
             Role = role;

@@ -1,18 +1,18 @@
 ﻿using System.Threading.Tasks;
 using UberPopug.Common.Interfaces;
 
-namespace UberPopug.TaskTrackerService.Users
+namespace UberPopug.TaskTrackerService.Users.Messages
 {
-    public class RegisterUserHandler : IKafkaHandler<string, CreateUserCommand>
+    public class UsersStreamHandler : IKafkaHandler<string, UserCreatedEvent>
     {
         private readonly TaskTrackerDbContext _context;
 
-        public RegisterUserHandler(TaskTrackerDbContext context)
+        public UsersStreamHandler(TaskTrackerDbContext context)
         {
             _context = context;
         }
 
-        public async Task HandleAsync(string key, CreateUserCommand value)
+        public async Task HandleAsync(string key, UserCreatedEvent value)
         {
             _context.Users.Add(new User
             {

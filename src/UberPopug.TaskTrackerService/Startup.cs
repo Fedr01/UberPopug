@@ -15,7 +15,9 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using UberPopug.Common.Consumer;
 using UberPopug.Common.Interfaces;
 using UberPopug.Common.Producer;
+using UberPopug.TaskTrackerService.Tasks;
 using UberPopug.TaskTrackerService.Users;
+using UberPopug.TaskTrackerService.Users.Messages;
 
 namespace UberPopug.TaskTrackerService
 {
@@ -95,12 +97,12 @@ namespace UberPopug.TaskTrackerService
 
             services.AddSingleton(producerConfig);
             services.AddSingleton(consumerConfig);
+            services.AddSingleton<IKafkaProducer, KafkaProducer>();
 
-            services.AddSingleton(typeof(IKafkaProducer<,>), typeof(KafkaProducer<,>));
-
-            services.AddScoped<IKafkaHandler<string, CreateUserCommand>, RegisterUserHandler>();
+            services.AddScoped<ITasksManager, TasksManager>();
+            services.AddScoped<IKafkaHandler<string, UserCreatedEvent>, UsersStreamHandler>();
             services.AddSingleton(typeof(IKafkaConsumer<,>), typeof(KafkaConsumer<,>));
-            services.AddHostedService<RegisterUserConsumer>();
+            services.AddHostedService<UsersStreamConsumer>();
 
             services.AddControllersWithViews();
         }

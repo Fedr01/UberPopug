@@ -36,7 +36,7 @@ namespace UberPopug.AuthService.Account
         private readonly AuthDbContext _dbContext;
         private readonly IEventService _events;
         private readonly IIdentityServerInteractionService _interaction;
-        private readonly IKafkaProducer<string, CreateUserCommand> _producer;
+        private readonly IKafkaProducer _producer;
         private readonly IAuthenticationSchemeProvider _schemeProvider;
 
         public AccountController(
@@ -45,7 +45,7 @@ namespace UberPopug.AuthService.Account
             IAuthenticationSchemeProvider schemeProvider,
             IEventService events,
             AuthDbContext dbContext,
-            IKafkaProducer<string, CreateUserCommand> producer)
+            IKafkaProducer producer)
         {
             _interaction = interaction;
             _clientStore = clientStore;
@@ -68,13 +68,19 @@ namespace UberPopug.AuthService.Account
         ///     Entry point into the login workflow
         /// </summary>
         [HttpPost]
-        public async Task<IActionResult> Create(User user)
+        public async Task<IActionResult> Create(CreateUserCommand command)
         {
+            var user = new User
+            {
+                Email = command.Email,
+                Password = command.Password,
+                Role = command.Role
+            };
+            
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
 
-            await _producer.ProduceAsync(KafkaTopics.CreateUser, user.Email,
-                new CreateUserCommand(user.Email, user.Role));
+            await _producer.ProduceAsync(KafkaTopics.UsersStream, new UserCreatedEvent(command.Email, command.Role));
 
             return View();
         }

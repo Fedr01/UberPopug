@@ -2,6 +2,10 @@
 {
     public static class KafkaTopics
     {
-        public static string CreateUser => nameof(CreateUser);
+        public static string UsersStream => "users-stream";
+        public static string Users => "users";
+        public static string TasksStream => "tasks-stream";
+        public static string Tasks => "tasks";
+        public static string TasksLifecycle => "tasks";
     }
 }

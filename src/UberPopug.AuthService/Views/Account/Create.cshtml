@@ -16,7 +16,7 @@
                     <form asp-controller="Account" asp-action="Create">
                         <div class="form-group">
                             <label asp-for="Email"></label>
-                            <input class="form-control" placeholder="Username" asp-for="Email" autofocus>
+                            <input class="form-control" placeholder="Username" asp-for="Email" autocomplete="off">
                         </div>
                         <div class="form-group">
                             <label asp-for="Password"></label>
@@ -24,7 +24,7 @@
                         </div>
                         <div class="form-group">
                             <label asp-for="Role"></label>
-                            <input type="password" class="form-control" placeholder="Role" asp-for="Role">
+                            <input class="form-control" placeholder="Role" asp-for="Role">
                         </div>
                         <button class="btn btn-primary" name="button" value="login">Ok</button>
                     </form>

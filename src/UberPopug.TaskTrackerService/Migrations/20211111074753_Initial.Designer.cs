@@ -10,7 +10,7 @@ using UberPopug.TaskTrackerService;
 namespace UberPopug.TaskTrackerService.Migrations
 {
     [DbContext(typeof(TaskTrackerDbContext))]
-    [Migration("20211102173109_Initial")]
+    [Migration("20211111074753_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,23 +23,27 @@ namespace UberPopug.TaskTrackerService.Migrations
 
             modelBuilder.Entity("UberPopug.TaskTrackerService.Tasks.Task", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("AssignedToEmail")
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("PublicId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<string>("UserEmail")
-                        .HasColumnType("nvarchar(50)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserEmail");
+                    b.HasIndex("AssignedToEmail");
 
                     b.ToTable("Tasks");
                 });
@@ -62,7 +66,7 @@ namespace UberPopug.TaskTrackerService.Migrations
                 {
                     b.HasOne("UberPopug.TaskTrackerService.Users.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserEmail");
+                        .HasForeignKey("AssignedToEmail");
 
                     b.Navigation("User");
                 });

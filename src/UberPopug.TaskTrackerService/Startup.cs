@@ -1,6 +1,7 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using Confluent.Kafka;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
@@ -14,7 +15,9 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using UberPopug.Common.Consumer;
 using UberPopug.Common.Interfaces;
 using UberPopug.Common.Producer;
+using UberPopug.TaskTrackerService.Tasks;
 using UberPopug.TaskTrackerService.Users;
+using UberPopug.TaskTrackerService.Users.Messages;
 
 namespace UberPopug.TaskTrackerService
 {
@@ -45,6 +48,8 @@ namespace UberPopug.TaskTrackerService
                 {
                     options.Cookie.SameSite = SameSiteMode.Unspecified;
                     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                    options.AccessDeniedPath = "";
+                    options.LoginPath = "";
                 })
                 .AddOpenIdConnect(options =>
                 {
@@ -70,6 +75,9 @@ namespace UberPopug.TaskTrackerService
                     options.SaveTokens = true;
 
                     options.Scope.Add("tracker");
+                    options.Scope.Add("roles");
+                    options.ClaimActions.MapJsonKey("role", "role", "role");
+                    options.TokenValidationParameters.RoleClaimType = "role";
                 });
 
             var clientConfig = new ClientConfig()
@@ -89,12 +97,12 @@ namespace UberPopug.TaskTrackerService
 
             services.AddSingleton(producerConfig);
             services.AddSingleton(consumerConfig);
+            services.AddSingleton<IKafkaProducer, KafkaProducer>();
 
-            services.AddSingleton(typeof(IKafkaProducer<,>), typeof(KafkaProducer<,>));
-
-            services.AddScoped<IKafkaHandler<string, CreateUserCommand>, RegisterUserHandler>();
+            services.AddScoped<ITasksManager, TasksManager>();
+            services.AddScoped<IKafkaHandler<string, UserCreatedEvent>, UsersStreamHandler>();
             services.AddSingleton(typeof(IKafkaConsumer<,>), typeof(KafkaConsumer<,>));
-            services.AddHostedService<RegisterUserConsumer>();
+            services.AddHostedService<UsersStreamConsumer>();
 
             services.AddControllersWithViews();
         }
@@ -107,9 +115,9 @@ namespace UberPopug.TaskTrackerService
                 MinimumSameSitePolicy = SameSiteMode.Unspecified,
                 Secure = CookieSecurePolicy.Always
             });
-            
+
             dataContext.Database.Migrate();
-            
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

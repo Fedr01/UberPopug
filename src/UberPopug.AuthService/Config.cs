@@ -3,19 +3,20 @@
 
 
 using System.Collections.Generic;
-using System.Security.Claims;
 using IdentityServer4.Models;
-using IdentityServer4.Test;
 
 namespace UberPopug.AuthService
 {
     public static class Config
     {
+        public static string TrackerUrl = "https://localhost:5010";
+
         public static IEnumerable<IdentityResource> IdentityResources =>
             new IdentityResource[]
             {
                 new IdentityResources.OpenId(),
                 new IdentityResources.Profile(),
+                new IdentityResource("roles", new[] { "role" })
             };
 
         public static IEnumerable<ApiScope> ApiScopes =>
@@ -27,24 +28,22 @@ namespace UberPopug.AuthService
         public static IEnumerable<Client> Clients =>
             new Client[]
             {
-              
                 // interactive client using code flow + pkce
                 new Client
                 {
                     ClientId = "tracker",
                     ClientSecrets = { new Secret("tracker-pwd".Sha256()) },
-                
+
                     AllowedGrantTypes = GrantTypes.Hybrid,
-                
-                    RedirectUris = { "https://localhost:5010/signin-oidc" },
-                    FrontChannelLogoutUri = "https://localhost:5010/signout-oidc",
-                    PostLogoutRedirectUris = { "https://localhost:5010/signout-callback-oidc" },
-                
+
+                    RedirectUris = { $"{TrackerUrl}/signin-oidc" },
+                    FrontChannelLogoutUri = $"{TrackerUrl}/signout-oidc",
+                    PostLogoutRedirectUris = { $"{TrackerUrl}/signout-callback-oidc" },
+
                     AllowOfflineAccess = true,
-                    AllowedScopes = { "openid", "profile", "tracker" },
+                    AllowedScopes = { "openid", "profile", "tracker", "roles" },
                     RequirePkce = false
                 },
-            };       
-     
+            };
     }
 }

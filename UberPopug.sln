@@ -6,6 +6,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UberPopug.Common", "src\Ube
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UberPopug.TaskTrackerService", "src\UberPopug.TaskTrackerService\UberPopug.TaskTrackerService.csproj", "{E0DBA387-3990-4F40-B31F-68020B06D654}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UberPopug.SchemaRegistry", "src\UberPopug.SchemaRegistry\UberPopug.SchemaRegistry.csproj", "{BE510BB9-EE10-4A46-9FF8-D71ED67C109C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UberPopug.AccountingService", "src\UberPopug.AccountingService\UberPopug.AccountingService.csproj", "{E298793A-4719-4FAB-88F3-2A49BA6834C8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UberPopug.IntegartionTests", "src\UberPopug.IntegartionTests\UberPopug.IntegartionTests.csproj", "{E3D688E8-2DC1-4908-87A5-CDD00FAE5BCF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +30,17 @@ Global
 		{E0DBA387-3990-4F40-B31F-68020B06D654}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E0DBA387-3990-4F40-B31F-68020B06D654}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E0DBA387-3990-4F40-B31F-68020B06D654}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE510BB9-EE10-4A46-9FF8-D71ED67C109C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE510BB9-EE10-4A46-9FF8-D71ED67C109C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE510BB9-EE10-4A46-9FF8-D71ED67C109C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE510BB9-EE10-4A46-9FF8-D71ED67C109C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E298793A-4719-4FAB-88F3-2A49BA6834C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E298793A-4719-4FAB-88F3-2A49BA6834C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E298793A-4719-4FAB-88F3-2A49BA6834C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E298793A-4719-4FAB-88F3-2A49BA6834C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3D688E8-2DC1-4908-87A5-CDD00FAE5BCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3D688E8-2DC1-4908-87A5-CDD00FAE5BCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3D688E8-2DC1-4908-87A5-CDD00FAE5BCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3D688E8-2DC1-4908-87A5-CDD00FAE5BCF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

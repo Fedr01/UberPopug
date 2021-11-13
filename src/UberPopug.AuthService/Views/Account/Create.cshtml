@@ -1,4 +1,4 @@
-@model UberPopug.AuthService.Users.User
+@model UberPopug.AuthService.Account.CreateUserCommand
 
 <div class="login-page">
     <div class="lead">
@@ -27,6 +27,10 @@
                             <input class="form-control" placeholder="Role" asp-for="Role">
                         </div>
                         <button class="btn btn-primary" name="button" value="login">Ok</button>
+                    </form>
+                    
+                    <form asp-controller="Account" asp-action="CreateRandom" method="post">
+                        <button class="btn btn-success" name="button" value="login">Create random user</button>
                     </form>
                 </div>
             </div>

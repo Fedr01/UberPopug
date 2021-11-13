@@ -18,19 +18,6 @@ namespace UberPopug.AuthService.Migrations
                 {
                     table.PrimaryKey("PK_Users", x => x.Email);
                 });
-
-            migrationBuilder.InsertData(
-                table: "Users",
-                columns: new[] { "Email", "Password", "Role" },
-                values: new object[,]
-                {
-                    { "admin@popug.ru", "123", 3 },
-                    { "manager@popug.ru", "123", 1 },
-                    { "accountant@popug.ru", "123", 2 },
-                    { "emp1@popug.ru", "123", 0 },
-                    { "emp2@popug.ru", "123", 0 },
-                    { "emp3@popug.ru", "123", 0 }
-                });
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

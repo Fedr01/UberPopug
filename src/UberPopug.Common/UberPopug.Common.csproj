@@ -16,4 +16,9 @@
       </Reference>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\..\UberPopug.SchemaRegistry\UberPopug.SchemaRegistry.csproj" />
+      <ProjectReference Include="..\UberPopug.SchemaRegistry\UberPopug.SchemaRegistry.csproj" />
+    </ItemGroup>
+
 </Project>

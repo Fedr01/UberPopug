@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using UberPopug.AuthService.Authentication;
 using UberPopug.Common.Interfaces;
-using UberPopug.Common.Producer;
+using UberPopug.Common.Kafka;
 
 namespace UberPopug.AuthService
 {
@@ -25,7 +25,7 @@ namespace UberPopug.AuthService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<AuthDbContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(Configuration.GetConnectionString("Auth")));
 
             services.AddControllersWithViews();
 
@@ -58,7 +58,7 @@ namespace UberPopug.AuthService
             var producerConfig = new ProducerConfig(clientConfig);
             var consumerConfig = new ConsumerConfig(clientConfig)
             {
-                GroupId = "SourceApp",
+                GroupId = "auth",
                 EnableAutoCommit = true,
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 StatisticsIntervalMs = 5000,

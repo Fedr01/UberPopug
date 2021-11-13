@@ -6,6 +6,5 @@
         public static string Users => "users";
         public static string TasksStream => "tasks-stream";
         public static string Tasks => "tasks";
-        public static string TasksLifecycle => "tasks";
     }
 }

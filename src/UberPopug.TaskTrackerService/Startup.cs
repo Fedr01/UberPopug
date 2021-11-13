@@ -12,12 +12,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using UberPopug.Common.Consumer;
 using UberPopug.Common.Interfaces;
-using UberPopug.Common.Producer;
+using UberPopug.Common.Kafka;
 using UberPopug.TaskTrackerService.Tasks;
 using UberPopug.TaskTrackerService.Users;
-using UberPopug.TaskTrackerService.Users.Messages;
 
 namespace UberPopug.TaskTrackerService
 {
@@ -36,7 +34,7 @@ namespace UberPopug.TaskTrackerService
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
             services.AddDbContext<TaskTrackerDbContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(Configuration.GetConnectionString("TaskTracker")));
 
 
             services.AddAuthentication(options =>
@@ -48,8 +46,6 @@ namespace UberPopug.TaskTrackerService
                 {
                     options.Cookie.SameSite = SameSiteMode.Unspecified;
                     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-                    options.AccessDeniedPath = "";
-                    options.LoginPath = "";
                 })
                 .AddOpenIdConnect(options =>
                 {
@@ -88,7 +84,7 @@ namespace UberPopug.TaskTrackerService
             var producerConfig = new ProducerConfig(clientConfig);
             var consumerConfig = new ConsumerConfig(clientConfig)
             {
-                GroupId = "SourceApp",
+                GroupId = "tracker",
                 EnableAutoCommit = true,
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 StatisticsIntervalMs = 5000,
@@ -100,8 +96,9 @@ namespace UberPopug.TaskTrackerService
             services.AddSingleton<IKafkaProducer, KafkaProducer>();
 
             services.AddScoped<ITasksManager, TasksManager>();
-            services.AddScoped<IKafkaHandler<string, UserCreatedEvent>, UsersStreamHandler>();
-            services.AddSingleton(typeof(IKafkaConsumer<,>), typeof(KafkaConsumer<,>));
+            
+            services.AddScoped<IUserCreatedEventHandler, UserCreatedEventHandler>();
+
             services.AddHostedService<UsersStreamConsumer>();
 
             services.AddControllersWithViews();

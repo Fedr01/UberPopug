@@ -3,7 +3,7 @@
     string name = null;
     if (!true.Equals(ViewData["signed-out"]))
     {
-        name =Context.User.Claims.First(c=>c.Type == "sub").Value;
+        name = Context.User.Claims.First(c => c.Type == "sub").Value;
     }
 }
 <!DOCTYPE html>
@@ -32,6 +32,14 @@
         </div>
 
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li>
+                    <a href="@Config.AuthUrl">Auth</a>
+                </li>
+                <li>
+                    <a href="@Config.AccountingUrl">Accounting</a>
+                </li>
+            </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">

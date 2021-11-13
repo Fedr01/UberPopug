@@ -15,9 +15,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UberPopug.AuthService.Users;
-using UberPopug.AuthService.Users.Messages;
 using UberPopug.Common.Constants;
 using UberPopug.Common.Interfaces;
+using UberPopug.SchemaRegistry.Schemas.Users;
 
 namespace UberPopug.AuthService.Account
 {
@@ -55,18 +55,12 @@ namespace UberPopug.AuthService.Account
             _producer = producer;
         }
 
-        /// <summary>
-        ///     Entry point into the login workflow
-        /// </summary>
         [HttpGet]
         public async Task<IActionResult> Create()
         {
             return View();
         }
 
-        /// <summary>
-        ///     Entry point into the login workflow
-        /// </summary>
         [HttpPost]
         public async Task<IActionResult> Create(CreateUserCommand command)
         {
@@ -76,13 +70,28 @@ namespace UberPopug.AuthService.Account
                 Password = command.Password,
                 Role = command.Role
             };
-            
+
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
 
-            await _producer.ProduceAsync(KafkaTopics.UsersStream, new UserCreatedEvent(command.Email, command.Role));
+            await _producer.ProduceAsync(KafkaTopics.UsersStream,
+                new UserCreatedEvent(command.Email, command.Role.ToString()));
 
             return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateRandom()
+        {
+            var random = new Random();
+            await Create(new CreateUserCommand
+            {
+                Email = $"{random.Next(1, 100000000)}@uberpopug.com",
+                Password = "123",
+                Role = Role.Employee
+            });
+
+            return RedirectToAction("Create");
         }
 
         /// <summary>

@@ -1,5 +1,5 @@
 @using UberPopug.TaskTrackerService.Users
-@model List<UberPopug.TaskTrackerService.Tasks.Task>
+@model List<UberPopug.TaskTrackerService.Tasks.TrackerTask>
 
 @{
     ViewBag.Title = "Tasks";
@@ -11,7 +11,7 @@
 
 <div class="container">
     <a asp-controller="Tasks" asp-action="NewTask" class="btn btn-success">Create new task</a>
-    @if (User.IsInRole(Role.Admin.ToString()))
+    @if (User.IsInRole("Admin"))
     {
         <a asp-controller="Tasks" asp-action="AssignTasks" class="btn btn-primary">Assign tasks</a>
     }
@@ -20,7 +20,8 @@
             <table class="table table-bordered">
                 <thead>
                 <tr>
-                    <th scope="col">Desciption</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Jira Id</th>
                     <th scope="col">Status</th>
                     <th scope="col">Assigned to</th>
                     <th scope="col">Action</th>
@@ -30,7 +31,8 @@
                 @foreach (var task in Model)
                 {
                     <tr>
-                        <td>@task.Description</td>
+                        <td>@task.Title</td>
+                        <td>@task.JiraId</td>
                         <td>@task.Status.ToString()</td>
                         <td>@task.AssignedToEmail</td>
                         <td>

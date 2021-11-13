@@ -48,7 +48,7 @@ namespace UberPopug.TaskTrackerService.Tasks
             return View("Index", tasks);
         }
 
-        public async System.Threading.Tasks.Task Logout()
+        public async Task Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);

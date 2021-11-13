@@ -21,10 +21,13 @@
 
     <ItemGroup>
       <Folder Include="Migrations" />
+      <Folder Include="Users\Messages" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\UberPopug.SchemaRegistry\UberPopug.SchemaRegistry.csproj" />
       <ProjectReference Include="..\UberPopug.Common\UberPopug.Common.csproj" />
+      <ProjectReference Include="..\UberPopug.SchemaRegistry\UberPopug.SchemaRegistry.csproj" />
     </ItemGroup>
 
     <ItemGroup>

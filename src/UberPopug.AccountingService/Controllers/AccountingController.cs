@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
@@ -6,9 +7,12 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using UberPopug.AccountingService.Accounting;
 using UberPopug.AccountingService.Models;
 using UberPopug.AccountingService.Users;
+using UberPopug.Common;
 
 namespace UberPopug.AccountingService.Controllers
 {
@@ -24,20 +28,33 @@ namespace UberPopug.AccountingService.Controllers
             _dbContext = dbContext;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View(new User
-            {
-                Email = "test"
-            });
+            var user = await _dbContext
+                .Users
+                .Include(u => u.Transactions)
+                .ThenInclude(u => u.Task)
+                .FirstOrDefaultAsync(u => u.Email == User.GetEmail());
+
+            return View(user);
         }
 
-        public IActionResult Statistics()
+        public async Task<IActionResult> Statistics()
         {
-            var users = _dbContext.Users.ToList();
-            return View(users);
+            var transactions = await _dbContext.Transactions
+                .Where(t => t.DateTime.Date == DateTime.UtcNow.Date)
+                .ToListAsync();
+
+            var completedTasksFee = transactions.Where(t => t.Type == TransactionType.Debit).Sum(t => t.Amount);
+            var assignedTasksFee = transactions.Where(t => t.Type == TransactionType.Credit).Sum(t => t.Amount);
+
+            var stats = new StatisticsViewModel
+            {
+                EarnedMoney = assignedTasksFee - completedTasksFee
+            };
+            return View(stats);
         }
-        
+
         public IActionResult Analytics()
         {
             return View();

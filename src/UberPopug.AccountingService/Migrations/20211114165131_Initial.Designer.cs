@@ -10,7 +10,7 @@ using UberPopug.AccountingService;
 namespace UberPopug.AccountingService.Migrations
 {
     [DbContext(typeof(AccountingDbContext))]
-    [Migration("20211112112111_Initial")]
+    [Migration("20211114165131_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,6 +21,44 @@ namespace UberPopug.AccountingService.Migrations
                 .HasAnnotation("ProductVersion", "5.0.10")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+            modelBuilder.Entity("UberPopug.AccountingService.Accounting.Transaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("DateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PublicId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TaskId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserEmail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PublicId")
+                        .IsUnique();
+
+                    b.HasIndex("TaskId");
+
+                    b.HasIndex("UserEmail");
+
+                    b.ToTable("Transactions");
+                });
+
             modelBuilder.Entity("UberPopug.AccountingService.Tasks.TrackerTask", b =>
                 {
                     b.Property<int>("Id")
@@ -28,8 +66,14 @@ namespace UberPopug.AccountingService.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<decimal>("AssignPrice")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("AssignedToEmail")
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("CompletePrice")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("JiraId")
                         .HasColumnType("nvarchar(max)");
@@ -47,6 +91,9 @@ namespace UberPopug.AccountingService.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AssignedToEmail");
+
+                    b.HasIndex("PublicId")
+                        .IsUnique();
 
                     b.ToTable("Tasks");
                 });
@@ -68,6 +115,25 @@ namespace UberPopug.AccountingService.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("UberPopug.AccountingService.Accounting.Transaction", b =>
+                {
+                    b.HasOne("UberPopug.AccountingService.Tasks.TrackerTask", "Task")
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("UberPopug.AccountingService.Users.User", "User")
+                        .WithMany("Transactions")
+                        .HasForeignKey("UserEmail")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Task");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("UberPopug.AccountingService.Tasks.TrackerTask", b =>
                 {
                     b.HasOne("UberPopug.AccountingService.Users.User", "User")
@@ -75,6 +141,11 @@ namespace UberPopug.AccountingService.Migrations
                         .HasForeignKey("AssignedToEmail");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("UberPopug.AccountingService.Users.User", b =>
+                {
+                    b.Navigation("Transactions");
                 });
 #pragma warning restore 612, 618
         }

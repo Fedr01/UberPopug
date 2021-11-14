@@ -27,6 +27,8 @@ namespace UberPopug.TaskTrackerService
 
             modelBuilder.Entity<TrackerTask>().ToTable("Tasks");
             modelBuilder.Entity<TrackerTask>().HasKey(u => u.Id);
+            modelBuilder.Entity<TrackerTask>().Property(u => u.PublicId).IsRequired();
+            modelBuilder.Entity<TrackerTask>().HasIndex(u => u.PublicId).IsUnique();
             modelBuilder.Entity<TrackerTask>().Property(u => u.Title).IsRequired();
 
             modelBuilder.Entity<TrackerTask>()

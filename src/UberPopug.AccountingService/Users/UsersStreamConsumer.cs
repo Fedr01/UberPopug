@@ -42,8 +42,10 @@ namespace UberPopug.AccountingService.Users
                     switch (ev.MetaData.EventName)
                     {
                         case nameof(UserCreatedEvent):
-                            var createdEventHandler = scope.ServiceProvider.GetRequiredService<IUserCreatedEventHandler>();
-                            await createdEventHandler.HandleAsync(JsonSerializer.Deserialize<UserCreatedEvent>(result.Message.Value));
+                            var createdEventHandler =
+                                scope.ServiceProvider.GetRequiredService<IUserCreatedEventHandler>();
+                            await createdEventHandler.HandleAsync(
+                                JsonSerializer.Deserialize<UserCreatedEvent>(result.Message.Value));
                             break;
                     }
 
@@ -57,12 +59,12 @@ namespace UberPopug.AccountingService.Users
                 {
                     Console.WriteLine($"Consume error: {e.Error.Reason}");
                     if (e.Error.IsFatal)
-                        break;
+                    {
+                    }
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine($"Unexpected error: {e}");
-                    break;
                 }
         }
 

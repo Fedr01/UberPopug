@@ -56,7 +56,7 @@ services:
       - "1433:1433"
     
   auth:
-    image: auth
+    image: uberpopug/auth
     build:
       context: src/
       dockerfile: UberPopug.AuthService/Dockerfile    
@@ -68,7 +68,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
 
   tracker:
-    image: tracker
+    image: uberpopug/tracker
     build:
       context: src/
       dockerfile: UberPopug.TaskTrackerService/Dockerfile    
@@ -80,7 +80,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
 
   accounting:
-    image: accounting
+    image: uberpopug/accounting
     build:
       context: src/
       dockerfile: UberPopug.AccountingService/Dockerfile    

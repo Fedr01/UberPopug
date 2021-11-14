@@ -35,12 +35,6 @@ namespace UberPopug.TaskTrackerService.Tasks
             var task = new TrackerTask(command.Title, command.JiraId);
             _context.Tasks.Add(task);
 
-            var users = await _context.Users.ToListAsync();
-
-            var random = new Random();
-            var assignedTo = users[random.Next(0, users.Count)];
-            task.AssignTo(assignedTo);
-
             await _context.SaveChangesAsync();
 
             await _producer.ProduceAsync(KafkaTopics.TasksStream, new TaskCreatedCudEvent.V2
@@ -52,10 +46,10 @@ namespace UberPopug.TaskTrackerService.Tasks
 
             await _producer.ProduceAsync(KafkaTopics.Tasks, new TaskCreatedEvent.V2
             {
-                PublicId = task.PublicId,
-                Title = task.Title,
-                JiraId = task.JiraId
+                PublicId = task.PublicId
             });
+
+            await AssignAsync(task);
         }
 
         public async Task CompleteAsync(int taskId)
@@ -75,7 +69,10 @@ namespace UberPopug.TaskTrackerService.Tasks
         {
             var tasks = await _context.Tasks.ToListAsync();
 
-            foreach (var task in tasks) await AssignAsync(task);
+            foreach (var task in tasks)
+            {
+                await AssignAsync(task);
+            }
 
             await _context.SaveChangesAsync();
 
@@ -84,7 +81,10 @@ namespace UberPopug.TaskTrackerService.Tasks
 
         private async Task AssignAsync(TrackerTask trackerTask)
         {
-            if (!_usersCache.Any()) _usersCache = await _context.Users.ToListAsync();
+            if (!_usersCache.Any())
+            {
+                _usersCache = await _context.Users.ToListAsync();
+            }
 
             var assignedTo = _usersCache[_random.Next(0, _usersCache.Count)];
             trackerTask.AssignTo(assignedTo);

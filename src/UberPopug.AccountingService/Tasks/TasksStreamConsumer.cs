@@ -60,12 +60,12 @@ namespace UberPopug.AccountingService.Tasks
                 {
                     Console.WriteLine($"Consume error: {e.Error.Reason}");
                     if (e.Error.IsFatal)
-                        break;
+                    {
+                    }
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine($"Unexpected error: {e}");
-                    break;
                 }
         }
 

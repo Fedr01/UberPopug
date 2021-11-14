@@ -106,6 +106,7 @@ namespace UberPopug.AccountingService
 
             services.AddHostedService<UsersStreamConsumer>();
             services.AddHostedService<TasksStreamConsumer>();
+            services.AddHostedService<TasksConsumer>();
 
             services.AddControllersWithViews();
         }

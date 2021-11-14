@@ -26,7 +26,7 @@ namespace UberPopug.AccountingService.Tasks
         public TasksConsumer(ConsumerConfig config, IServiceScopeFactory serviceScopeFactory)
         {
             _serviceScopeFactory = serviceScopeFactory;
-            _topic = KafkaTopics.TasksStream;
+            _topic = KafkaTopics.Tasks;
             _kafkaConsumer = new ConsumerBuilder<string, string>(config).Build();
         }
 
@@ -48,18 +48,24 @@ namespace UberPopug.AccountingService.Tasks
                     switch (ev.MetaData.EventName)
                     {
                         case nameof(TaskCreatedEvent):
-                            var createdEventHandler = scope.ServiceProvider.GetRequiredService<ITaskCreatedEventV2Handler>();
-                            await createdEventHandler.HandleAsync(JsonSerializer.Deserialize<TaskCreatedEvent.V2>(result.Message.Value));
+                            var createdEventHandler =
+                                scope.ServiceProvider.GetRequiredService<ITaskCreatedEventV2Handler>();
+                            await createdEventHandler.HandleAsync(
+                                JsonSerializer.Deserialize<TaskCreatedEvent.V2>(result.Message.Value));
                             break;
-                        
+
                         case nameof(TaskCompletedEvent):
-                            var completedEventHandler = scope.ServiceProvider.GetRequiredService<ITaskCompletedEventHandler>();
-                            await completedEventHandler.HandleAsync(JsonSerializer.Deserialize<TaskCompletedEvent>(result.Message.Value));
+                            var completedEventHandler =
+                                scope.ServiceProvider.GetRequiredService<ITaskCompletedEventHandler>();
+                            await completedEventHandler.HandleAsync(
+                                JsonSerializer.Deserialize<TaskCompletedEvent>(result.Message.Value));
                             break;
-                        
+
                         case nameof(TaskAssignedEvent):
-                            var assignedEventHandler = scope.ServiceProvider.GetRequiredService<ITaskAssignedEventHandler>();
-                            await assignedEventHandler.HandleAsync(JsonSerializer.Deserialize<TaskAssignedEvent>(result.Message.Value));
+                            var assignedEventHandler =
+                                scope.ServiceProvider.GetRequiredService<ITaskAssignedEventHandler>();
+                            await assignedEventHandler.HandleAsync(
+                                JsonSerializer.Deserialize<TaskAssignedEvent>(result.Message.Value));
                             break;
                     }
 
@@ -73,12 +79,12 @@ namespace UberPopug.AccountingService.Tasks
                 {
                     Console.WriteLine($"Consume error: {e.Error.Reason}");
                     if (e.Error.IsFatal)
-                        break;
+                    {
+                    }
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine($"Unexpected error: {e}");
-                    break;
                 }
         }
 

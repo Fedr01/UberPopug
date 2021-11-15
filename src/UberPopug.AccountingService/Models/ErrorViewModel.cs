@@ -1,5 +1,3 @@
-using System;
-
 namespace UberPopug.AccountingService.Models
 {
     public class ErrorViewModel

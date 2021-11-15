@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using UberPopug.TaskTrackerService.Tasks;
 using UberPopug.TaskTrackerService.Users;
 

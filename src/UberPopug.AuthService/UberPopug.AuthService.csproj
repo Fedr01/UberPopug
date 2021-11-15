@@ -22,9 +22,8 @@
     <ItemGroup>
       <Folder Include="Users\Messages" />
     </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\..\UberPopug.SchemaRegistry\UberPopug.SchemaRegistry.csproj" />
+    
+    <ItemGroup>  
       <ProjectReference Include="..\UberPopug.Common\UberPopug.Common.csproj" />
       <ProjectReference Include="..\UberPopug.SchemaRegistry\UberPopug.SchemaRegistry.csproj" />
     </ItemGroup>

@@ -1,4 +1,3 @@
-using Confluent.Kafka;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -7,8 +6,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using UberPopug.AuthService.Authentication;
-using UberPopug.Common.Interfaces;
-using UberPopug.Common.Kafka;
+using KafkaFlow;
+using KafkaFlow.Serializer;
+using KafkaFlow.TypedHandler;
+using UberPopug.Common;
+using UberPopug.Common.Constants;
+using UberPopug.SchemaRegistry.Schemas.Users;
 
 namespace UberPopug.AuthService
 {
@@ -39,7 +42,6 @@ namespace UberPopug.AuthService
                     // see https://identityserver4.readthedocs.io/en/latest/topics/resources.html
                     options.EmitStaticAudienceClaim = true;
                 })
-                
                 .AddProfileService<ProfileService>();
 
             // in-memory, code config
@@ -50,24 +52,20 @@ namespace UberPopug.AuthService
             // not recommended for production - you need to store your key material somewhere secure
             builder.AddDeveloperSigningCredential();
 
-            var clientConfig = new ClientConfig()
-            {
-                BootstrapServers = Configuration["Kafka:ClientConfigs:BootstrapServers"]
-            };
-
-            var producerConfig = new ProducerConfig(clientConfig);
-            var consumerConfig = new ConsumerConfig(clientConfig)
-            {
-                GroupId = "auth",
-                EnableAutoCommit = true,
-                AutoOffsetReset = AutoOffsetReset.Earliest,
-                StatisticsIntervalMs = 5000,
-                SessionTimeoutMs = 6000
-            };
-
-            services.AddSingleton(producerConfig);
-            services.AddSingleton(consumerConfig);
-            services.AddSingleton<IKafkaProducer, KafkaProducer>();
+            services.AddKafka(
+                kafka => kafka
+                    .UseConsoleLog()
+                    .AddCluster(
+                        cluster => cluster
+                            .WithBrokers(new[] { Configuration["Kafka:ClientConfigs:BootstrapServers"] })
+                            //   .WithSchemaRegistry(config => config.Url = "localhost:8081")
+                            .AddProducer<UserCreatedEvent>(
+                                producer => producer
+                                    .DefaultTopic(KafkaTopics.UsersStream)
+                                    .AddMiddlewares(middlewares => middlewares
+                                        .AddSerializer<NewtonsoftJsonSerializer, KafkaMessageTypeResolver>()
+                                    ))
+                    ));
 
             services.AddControllersWithViews();
 
@@ -95,6 +93,7 @@ namespace UberPopug.AuthService
             app.UseRouting();
             app.UseIdentityServer();
             app.UseAuthorization();
+
             app.UseEndpoints(endpoints => { endpoints.MapDefaultControllerRoute(); });
         }
     }

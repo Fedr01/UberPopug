@@ -1,19 +1,13 @@
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Shouldly;
-using UberPopug.AccountingService;
 using UberPopug.AuthService;
-using UberPopug.TaskTrackerService;
 using Xunit;
 using Startup = UberPopug.AuthService.Startup;
 
@@ -42,10 +36,13 @@ namespace UberPopug.IntegartionTests
                 await _authWebApp.Client.PostAsync("/Account/CreateRandom", new StringContent(""));
             }
 
+            await Task.Delay(2000);
+            
             var authUsers = await _authWebApp.AuthDbContext.Users.ToListAsync();
             var trackerUsers = await _authWebApp.TrackerDbContext.Users.ToListAsync();
             var accountingUsers = await _authWebApp.AccountingDbContext.Users.ToListAsync();
 
+            
             authUsers.Count.ShouldBe(10);
             trackerUsers.Count.ShouldBe(authUsers.Count);
             accountingUsers.Count.ShouldBe(authUsers.Count);

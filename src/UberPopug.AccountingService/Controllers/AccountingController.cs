@@ -11,7 +11,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using UberPopug.AccountingService.Accounting;
 using UberPopug.AccountingService.Models;
-using UberPopug.AccountingService.Users;
 using UberPopug.Common;
 
 namespace UberPopug.AccountingService.Controllers

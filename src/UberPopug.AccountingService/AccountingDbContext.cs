@@ -1,5 +1,4 @@
-﻿using System.Transactions;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using UberPopug.AccountingService.Tasks;
 using UberPopug.AccountingService.Users;
 using Transaction = UberPopug.AccountingService.Accounting.Transaction;

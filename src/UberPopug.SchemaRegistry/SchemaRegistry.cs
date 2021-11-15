@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace UberPopug.SchemaRegistry
+﻿namespace UberPopug.SchemaRegistry
 {
     public static class SchemaRegistry
     {

@@ -1,6 +1,8 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
-using Confluent.Kafka;
+using KafkaFlow;
+using KafkaFlow.Serializer;
+using KafkaFlow.TypedHandler;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -12,10 +14,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using UberPopug.Common.Interfaces;
-using UberPopug.Common.Kafka;
+using UberPopug.Common;
+using UberPopug.Common.Constants;
 using UberPopug.TaskTrackerService.Tasks;
 using UberPopug.TaskTrackerService.Users;
+using AutoOffsetReset = KafkaFlow.AutoOffsetReset;
 
 namespace UberPopug.TaskTrackerService
 {
@@ -52,6 +55,7 @@ namespace UberPopug.TaskTrackerService
                     options.CorrelationCookie = new Microsoft.AspNetCore.Http.CookieBuilder
                     {
                         HttpOnly = false,
+
                         SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Unspecified,
                         SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.Always,
                         Expiration = TimeSpan.FromMinutes(10)
@@ -76,36 +80,54 @@ namespace UberPopug.TaskTrackerService
                     options.TokenValidationParameters.RoleClaimType = "role";
                 });
 
-            var clientConfig = new ClientConfig()
-            {
-                BootstrapServers = Configuration["Kafka:ClientConfigs:BootstrapServers"]
-            };
 
-            var producerConfig = new ProducerConfig(clientConfig);
-            var consumerConfig = new ConsumerConfig(clientConfig)
-            {
-                GroupId = "tracker",
-                EnableAutoCommit = true,
-                AutoOffsetReset = AutoOffsetReset.Earliest,
-                StatisticsIntervalMs = 5000,
-                SessionTimeoutMs = 6000
-            };
-
-            services.AddSingleton(producerConfig);
-            services.AddSingleton(consumerConfig);
-            services.AddSingleton<IKafkaProducer, KafkaProducer>();
+            services.AddKafka(
+                kafka => kafka
+                    .UseConsoleLog()
+                    .AddCluster(
+                        cluster => cluster
+                            .WithBrokers(new[] { Configuration["Kafka:ClientConfigs:BootstrapServers"] })
+                            //   .WithSchemaRegistry(config => config.Url = "localhost:8081")
+                            .AddProducer(
+                                KafkaTopics.TasksStream,
+                                producer => producer
+                                    .DefaultTopic(KafkaTopics.TasksStream)
+                                    .AddMiddlewares(middlewares => middlewares
+                                        .AddSerializer<NewtonsoftJsonSerializer, KafkaMessageTypeResolver>()
+                                    )
+                            )
+                            .AddProducer(
+                                KafkaTopics.Tasks,
+                                producer => producer
+                                    .DefaultTopic(KafkaTopics.Tasks)
+                                    .AddMiddlewares(middlewares => middlewares
+                                        .AddSerializer<NewtonsoftJsonSerializer, KafkaMessageTypeResolver>()
+                                    )
+                            )
+                            .AddConsumer(
+                                consumer => consumer
+                                    .Topic(KafkaTopics.UsersStream)
+                                    .WithGroupId("tracker-group-id")
+                                    .WithBufferSize(1)
+                                    .WithWorkersCount(1)
+                                    .WithAutoOffsetReset(AutoOffsetReset.Latest)
+                                    .AddMiddlewares(
+                                        middlewares => middlewares
+                                            .AddSerializer<NewtonsoftJsonSerializer, KafkaMessageTypeResolver>()
+                                            .AddTypedHandlers(
+                                                handlers => handlers
+                                                    .AddHandler<UserCreatedEventHandler>()
+                                                    .WithHandlerLifetime(InstanceLifetime.Scoped)
+                                            )
+                                    )
+                            )));
 
             services.AddScoped<ITasksManager, TasksManager>();
-            
-            services.AddScoped<IUserCreatedEventHandler, UserCreatedEventHandler>();
-
-            services.AddHostedService<UsersStreamConsumer>();
-
             services.AddControllersWithViews();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, TaskTrackerDbContext dataContext)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, TaskTrackerDbContext dataContext, IHostApplicationLifetime lifetime)
         {
             app.UseCookiePolicy(new CookiePolicyOptions
             {
@@ -132,6 +154,9 @@ namespace UberPopug.TaskTrackerService
 
             app.UseAuthentication();
             app.UseAuthorization();
+            
+            var kafkaBus = app.ApplicationServices.CreateKafkaBus();
+            lifetime.ApplicationStarted.Register(() => kafkaBus.StartAsync(lifetime.ApplicationStopped));
 
 
             app.UseEndpoints(endpoints =>

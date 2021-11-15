@@ -1,6 +1,8 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
-using Confluent.Kafka;
+using KafkaFlow;
+using KafkaFlow.Serializer;
+using KafkaFlow.TypedHandler;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -12,13 +14,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using UberPopug.AccountingService.Tasks;
 using UberPopug.AccountingService.Tasks.Assigned;
 using UberPopug.AccountingService.Tasks.Completed;
 using UberPopug.AccountingService.Tasks.Created;
 using UberPopug.AccountingService.Users;
-using UberPopug.Common.Interfaces;
-using UberPopug.Common.Kafka;
+using UberPopug.Common;
+using UberPopug.Common.Constants;
+using AutoOffsetReset = KafkaFlow.AutoOffsetReset;
 
 namespace UberPopug.AccountingService
 {
@@ -79,40 +81,82 @@ namespace UberPopug.AccountingService
                     options.TokenValidationParameters.RoleClaimType = "role";
                 });
 
-            var clientConfig = new ClientConfig()
-            {
-                BootstrapServers = Configuration["Kafka:ClientConfigs:BootstrapServers"]
-            };
-
-            var producerConfig = new ProducerConfig(clientConfig);
-            var consumerConfig = new ConsumerConfig(clientConfig)
-            {
-                GroupId = "accounting",
-                EnableAutoCommit = true,
-                AutoOffsetReset = AutoOffsetReset.Earliest,
-                StatisticsIntervalMs = 5000,
-                SessionTimeoutMs = 6000
-            };
-
-            services.AddSingleton(producerConfig);
-            services.AddSingleton(consumerConfig);
-            services.AddSingleton<IKafkaProducer, KafkaProducer>();
-
-            services.AddScoped<IUserCreatedEventHandler, UserCreatedEventHandler>();
-            services.AddScoped<ITaskCreatedCudEventV2Handler, TaskCreatedCudEventV2Handler>();
-            services.AddScoped<ITaskCreatedEventV2Handler, TaskCreatedEventV2Handler>();
-            services.AddScoped<ITaskAssignedEventHandler, TaskAssignedEventHandler>();
-            services.AddScoped<ITaskCompletedEventHandler, TaskCompletedEventHandler>();
-
-            services.AddHostedService<UsersStreamConsumer>();
-            services.AddHostedService<TasksStreamConsumer>();
-            services.AddHostedService<TasksConsumer>();
+            services.AddKafka(
+                kafka => kafka
+                    .UseConsoleLog()
+                    .AddCluster(
+                        cluster => cluster
+                            .WithBrokers(new[] { Configuration["Kafka:ClientConfigs:BootstrapServers"] })
+                            //   .WithSchemaRegistry(config => config.Url = "localhost:8081")
+                            .AddConsumer(
+                                consumer => consumer
+                                    .Topic(KafkaTopics.UsersStream)
+                                    .WithGroupId("accounting-group-id")
+                                    .WithBufferSize(1)
+                                    .WithWorkersCount(1)
+                                    .WithAutoOffsetReset(AutoOffsetReset.Latest)
+                                    .AddMiddlewares(
+                                        middlewares => middlewares
+                                            .AddSerializer<NewtonsoftJsonSerializer, KafkaMessageTypeResolver>()
+                                            .AddTypedHandlers(
+                                                handlers => handlers
+                                                    .AddHandler<UserCreatedEventHandler>()
+                                                    .WithHandlerLifetime(InstanceLifetime.Scoped)
+                                            )
+                                    )
+                            )
+                            .AddConsumer(
+                                consumer => consumer
+                                    .Topic(KafkaTopics.TasksStream)
+                                    .WithGroupId("accounting-group-id")
+                                    .WithBufferSize(1)
+                                    .WithWorkersCount(1)
+                                    .WithAutoOffsetReset(AutoOffsetReset.Latest)
+                                    .AddMiddlewares(
+                                        middlewares => middlewares
+                                            .AddSerializer<NewtonsoftJsonSerializer, KafkaMessageTypeResolver>()
+                                            .AddTypedHandlers(
+                                                handlers => handlers
+                                                    .AddHandler<TaskCreatedCudEventV2Handler>()
+                                                    .WithHandlerLifetime(InstanceLifetime.Scoped)
+                                            )
+                                    )
+                            )
+                            .AddConsumer(
+                                consumer => consumer
+                                    .Topic(KafkaTopics.Tasks)
+                                    .WithGroupId("accounting-group-id")
+                                    .WithBufferSize(1)
+                                    .WithWorkersCount(1)
+                                    .WithAutoOffsetReset(AutoOffsetReset.Latest)
+                                    .AddMiddlewares(
+                                        middlewares => middlewares
+                                            .AddSerializer<NewtonsoftJsonSerializer, KafkaMessageTypeResolver>()
+                                            .AddTypedHandlers(
+                                                handlers => handlers
+                                                    .AddHandler<TaskCreatedEventV2Handler>()
+                                                    .WithHandlerLifetime(InstanceLifetime.Scoped)
+                                            )
+                                            .AddTypedHandlers(
+                                                handlers => handlers
+                                                    .AddHandler<TaskCompletedEventHandler>()
+                                                    .WithHandlerLifetime(InstanceLifetime.Scoped)
+                                            )
+                                            .AddTypedHandlers(
+                                                handlers => handlers
+                                                    .AddHandler<TaskAssignedEventHandler>()
+                                                    .WithHandlerLifetime(InstanceLifetime.Scoped)
+                                            )
+                                    )
+                            )
+                    ));
 
             services.AddControllersWithViews();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AccountingDbContext dataContext)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AccountingDbContext dataContext,
+            IHostApplicationLifetime lifetime)
         {
             app.UseCookiePolicy(new CookiePolicyOptions
             {
@@ -140,6 +184,8 @@ namespace UberPopug.AccountingService
             app.UseAuthentication();
             app.UseAuthorization();
 
+            var kafkaBus = app.ApplicationServices.CreateKafkaBus();
+            lifetime.ApplicationStarted.Register(() => kafkaBus.StartAsync(lifetime.ApplicationStopped));
 
             app.UseEndpoints(endpoints =>
             {

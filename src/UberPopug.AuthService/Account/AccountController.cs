@@ -9,14 +9,13 @@ using IdentityServer4.Extensions;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
 using IdentityServer4.Stores;
+using KafkaFlow;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UberPopug.AuthService.Users;
-using UberPopug.Common.Constants;
-using UberPopug.Common.Interfaces;
 using UberPopug.SchemaRegistry.Schemas.Users;
 
 namespace UberPopug.AuthService.Account
@@ -36,7 +35,7 @@ namespace UberPopug.AuthService.Account
         private readonly AuthDbContext _dbContext;
         private readonly IEventService _events;
         private readonly IIdentityServerInteractionService _interaction;
-        private readonly IKafkaProducer _producer;
+        private readonly IMessageProducer<UserCreatedEvent> _usersProducer;
         private readonly IAuthenticationSchemeProvider _schemeProvider;
 
         public AccountController(
@@ -45,14 +44,15 @@ namespace UberPopug.AuthService.Account
             IAuthenticationSchemeProvider schemeProvider,
             IEventService events,
             AuthDbContext dbContext,
-            IKafkaProducer producer)
+            IMessageProducer<UserCreatedEvent> usersProducer)
+          
         {
             _interaction = interaction;
             _clientStore = clientStore;
             _schemeProvider = schemeProvider;
             _events = events;
             _dbContext = dbContext;
-            _producer = producer;
+            _usersProducer = usersProducer;
         }
 
         [HttpGet]
@@ -74,8 +74,10 @@ namespace UberPopug.AuthService.Account
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
 
-            await _producer.ProduceAsync(KafkaTopics.UsersStream,
-                new UserCreatedEvent(command.Email, command.Role.ToString()));
+            await _usersProducer.ProduceAsync(
+                Guid.NewGuid().ToString(),
+                new UserCreatedEvent(command.Email, command.Role.ToString())
+            );
 
             return View();
         }

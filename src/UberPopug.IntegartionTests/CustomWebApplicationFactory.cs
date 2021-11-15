@@ -1,6 +1,3 @@
-using System;
-using System.Data.Common;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Authentication;
@@ -9,7 +6,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using UberPopug.AccountingService;
 using UberPopug.AuthService;
 using UberPopug.TaskTrackerService;

@@ -5,19 +5,23 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Confluent.Kafka" Version="1.8.2" />
+      <PackageReference Include="KafkaFlow" Version="2.1.20" />
+      <PackageReference Include="KafkaFlow.Abstractions" Version="2.1.20" />
+      <PackageReference Include="KafkaFlow.Extensions.Hosting" Version="2.1.20" />
+      <PackageReference Include="KafkaFlow.LogHandler.Console" Version="2.1.20" />
+      <PackageReference Include="KafkaFlow.Microsoft.DependencyInjection" Version="2.1.20" />
+      <PackageReference Include="KafkaFlow.SchemaRegistry" Version="2.1.20" />
+      <PackageReference Include="KafkaFlow.Serializer" Version="2.1.20" />
+      <PackageReference Include="KafkaFlow.Serializer.Json" Version="1.5.8" />
+      <PackageReference Include="KafkaFlow.Serializer.JsonCore" Version="2.1.20" />
+      <PackageReference Include="KafkaFlow.Serializer.NewtonsoftJson" Version="2.1.20" />
+      <PackageReference Include="KafkaFlow.Serializer.SchemaRegistry.ConfluentJson" Version="2.1.20" />
+      <PackageReference Include="KafkaFlow.TypedHandler" Version="2.1.20" />
       <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
       <PackageReference Include="System.Text.Json" Version="5.0.2" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=5.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
-        <HintPath>..\..\..\..\Program Files\dotnet\shared\Microsoft.AspNetCore.App\5.0.10\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\..\UberPopug.SchemaRegistry\UberPopug.SchemaRegistry.csproj" />
+    <ItemGroup>   
       <ProjectReference Include="..\UberPopug.SchemaRegistry\UberPopug.SchemaRegistry.csproj" />
     </ItemGroup>
 

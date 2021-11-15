@@ -1,9 +1,11 @@
 using System.Threading.Tasks;
+using KafkaFlow;
+using KafkaFlow.TypedHandler;
 using UberPopug.SchemaRegistry.Schemas.Users;
 
 namespace UberPopug.TaskTrackerService.Users
 {
-    public class UserCreatedEventHandler : IUserCreatedEventHandler
+    public class UserCreatedEventHandler : IMessageHandler<UserCreatedEvent>
     {
         private readonly TaskTrackerDbContext _dbContext;
 
@@ -12,12 +14,12 @@ namespace UberPopug.TaskTrackerService.Users
             _dbContext = dbContext;
         }
 
-        public async Task HandleAsync(UserCreatedEvent @event)
+        public async Task Handle(IMessageContext context, UserCreatedEvent message)
         {
             _dbContext.Users.Add(new User
             {
-                Email = @event.Email,
-                Role = @event.Role
+                Email = message.Email,
+                Role = message.Role
             });
 
             await _dbContext.SaveChangesAsync();

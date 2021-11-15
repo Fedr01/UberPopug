@@ -1,11 +1,12 @@
 using System.Threading.Tasks;
+using KafkaFlow;
+using KafkaFlow.TypedHandler;
 using Microsoft.EntityFrameworkCore;
-using UberPopug.SchemaRegistry;
 using UberPopug.SchemaRegistry.Schemas.Tasks;
 
 namespace UberPopug.AccountingService.Tasks.Assigned
 {
-    public class TaskAssignedEventHandler : ITaskAssignedEventHandler
+    public class TaskAssignedEventHandler : IMessageHandler<TaskAssignedEvent>
     {
         private readonly AccountingDbContext _dbContext;
 
@@ -14,11 +15,11 @@ namespace UberPopug.AccountingService.Tasks.Assigned
             _dbContext = dbContext;
         }
 
-        public async Task HandleAsync(TaskAssignedEvent ev)
+        public async Task Handle(IMessageContext context, TaskAssignedEvent message)
         {
-            var task = await _dbContext.Tasks.FirstOrDefaultAsync(t => t.PublicId == ev.PublicId);
-            var user = await _dbContext.Users.FirstAsync(u => u.Email == ev.AssignedToEmail);
-            
+            var task = await _dbContext.Tasks.FirstOrDefaultAsync(t => t.PublicId == message.PublicId);
+            var user = await _dbContext.Users.FirstAsync(u => u.Email == message.AssignedToEmail);
+
             task.AssignTo(user);
             await _dbContext.SaveChangesAsync();
         }

@@ -6,7 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="IdentityServer4" Version="4.1.2" />
+        <PackageReference Include="IdentityServer4" Version="4.1.2" /> 
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.11" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.10">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -19,8 +19,9 @@
         <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
     </ItemGroup>
 
-    <ItemGroup>
+    <ItemGroup>  
       <ProjectReference Include="..\UberPopug.Common\UberPopug.Common.csproj" />
+      <ProjectReference Include="..\UberPopug.SchemaRegistry\UberPopug.SchemaRegistry.csproj" />
     </ItemGroup>
 
     <ItemGroup>

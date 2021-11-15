@@ -29,8 +29,7 @@ namespace UberPopug.TaskTrackerService.Migrations
                     b.Property<string>("AssignedToEmail")
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
+                    b.Property<string>("JiraId")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("PublicId")
@@ -38,6 +37,10 @@ namespace UberPopug.TaskTrackerService.Migrations
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -52,8 +55,8 @@ namespace UberPopug.TaskTrackerService.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("int");
+                    b.Property<string>("Role")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Email");
 

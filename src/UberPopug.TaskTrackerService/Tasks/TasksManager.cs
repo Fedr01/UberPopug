@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using KafkaFlow.Producers;
 using Microsoft.EntityFrameworkCore;
 using UberPopug.Common.Constants;
-using UberPopug.Common.Interfaces;
-using UberPopug.TaskTrackerService.Tasks.Messages;
+using UberPopug.SchemaRegistry.Schemas.Tasks;
+using UberPopug.SchemaRegistry.Schemas.Tasks.Cud;
 using UberPopug.TaskTrackerService.Users;
 
 namespace UberPopug.TaskTrackerService.Tasks
@@ -12,62 +14,59 @@ namespace UberPopug.TaskTrackerService.Tasks
     public class TasksManager : ITasksManager
     {
         private readonly TaskTrackerDbContext _context;
-        private readonly IKafkaProducer _producer;
+        private readonly IProducerAccessor _producers;
         private readonly Random _random = new();
 
         private List<User> _usersCache = new();
 
-        public System.Threading.Tasks.Task<List<Task>> GetAllAsync()
+        public TasksManager(TaskTrackerDbContext context, IProducerAccessor producers)
+        {
+            _context = context;
+            _producers = producers;
+        }
+
+
+        public Task<List<TrackerTask>> GetAllAsync()
         {
             return _context.Tasks.ToListAsync();
         }
 
-        public TasksManager(TaskTrackerDbContext context, IKafkaProducer producer)
+        public async Task CreateAsync(CreateTaskCommand command)
         {
-            _context = context;
-            _producer = producer;
-        }
-
-        public async System.Threading.Tasks.Task CreateAsync(CreateTaskCommand command)
-        {
-            var task = new Task(command.Description);
+            var task = new TrackerTask(command.Title, command.JiraId);
             _context.Tasks.Add(task);
-
-            var users = await _context.Users.ToListAsync();
-
-            var random = new Random();
-            var assignedTo = users[random.Next(0, users.Count)];
-            task.AssignTo(assignedTo);
 
             await _context.SaveChangesAsync();
 
-            await _producer.ProduceAsync(KafkaTopics.TasksStream, new TaskCreatedEvent
+            await _producers[KafkaTopics.TasksStream].ProduceAsync(Guid.NewGuid().ToString(), new TaskCreatedCudEvent.V2
             {
                 PublicId = task.PublicId,
-                Description = task.Description
+                Title = task.Title,
+                JiraId = task.JiraId
             });
 
-            await _producer.ProduceAsync(KafkaTopics.Tasks, new TaskCreatedEvent
+            await _producers[KafkaTopics.Tasks].ProduceAsync(Guid.NewGuid().ToString(), new TaskCreatedEvent.V2
             {
-                PublicId = task.PublicId,
-                Description = task.Description
+                PublicId = task.PublicId
             });
+
+            await AssignAsync(task);
         }
 
-        public async System.Threading.Tasks.Task CompleteAsync(int taskId)
+        public async Task CompleteAsync(int taskId)
         {
             var task = await _context.Tasks.FirstAsync(t => t.Id == taskId);
             task.Complete();
 
             await _context.SaveChangesAsync();
 
-            await _producer.ProduceAsync(KafkaTopics.TasksLifecycle, new TaskCompletedEvent
+            await _producers[KafkaTopics.Tasks].ProduceAsync(Guid.NewGuid().ToString(), new TaskCompletedEvent
             {
                 PublicId = task.PublicId
             });
         }
 
-        public async System.Threading.Tasks.Task<List<Task>> AssignAllAsync()
+        public async Task<List<TrackerTask>> AssignAllAsync()
         {
             var tasks = await _context.Tasks.ToListAsync();
 
@@ -81,7 +80,7 @@ namespace UberPopug.TaskTrackerService.Tasks
             return tasks;
         }
 
-        private async System.Threading.Tasks.Task AssignAsync(Task task)
+        private async Task AssignAsync(TrackerTask trackerTask)
         {
             if (!_usersCache.Any())
             {
@@ -89,28 +88,15 @@ namespace UberPopug.TaskTrackerService.Tasks
             }
 
             var assignedTo = _usersCache[_random.Next(0, _usersCache.Count)];
-            task.AssignTo(assignedTo);
+            trackerTask.AssignTo(assignedTo);
 
             await _context.SaveChangesAsync();
 
-            await _producer.ProduceAsync(KafkaTopics.TasksLifecycle, new TaskAssignedEvent
+            await _producers[KafkaTopics.Tasks].ProduceAsync(Guid.NewGuid().ToString(), new TaskAssignedEvent
             {
-                PublicId = task.PublicId,
-                AssignedToEmail = task.AssignedToEmail
+                PublicId = trackerTask.PublicId,
+                AssignedToEmail = trackerTask.AssignedToEmail
             });
         }
-    }
-
-    public interface ITasksManager
-    {
-        System.Threading.Tasks.Task<List<Task>> GetAllAsync();
-        System.Threading.Tasks.Task CreateAsync(CreateTaskCommand command);
-        System.Threading.Tasks.Task CompleteAsync(int taskId);
-        System.Threading.Tasks.Task<List<Task>> AssignAllAsync();
-    }
-
-    public class CreateTaskCommand
-    {
-        public string Description { get; set; }
     }
 }

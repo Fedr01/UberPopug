@@ -1,0 +1,44 @@
+@using UberPopug.AccountingService.Accounting
+@model UberPopug.AccountingService.Users.User
+
+@{
+    ViewBag.Title = "Tasks";
+    Layout = "_Layout";
+}
+
+<h2>Personal dashboard</h2>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+           Hello, @Model.Email!
+        </div>
+        <div class="col-12">
+            Balance: @Model.Balance
+        </div>
+         <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th scope="col">Id</th>
+                            <th scope="col">Money</th>
+                            <th scope="col">Task</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var transaction in Model.Transactions)
+                        {
+                            <tr>
+                                @{
+                                    var amount = @transaction.Type == TransactionType.Credit
+                                        ? -transaction.Amount
+                                        : transaction.Amount;
+                                }
+                                <td>@transaction.PublicId</td>
+                                <td>@amount</td>
+                                <td>@transaction.Task.Title</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+    </div>
+</div>

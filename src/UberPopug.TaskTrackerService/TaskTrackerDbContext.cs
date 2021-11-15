@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using UberPopug.TaskTrackerService.Tasks;
 using UberPopug.TaskTrackerService.Users;
 
@@ -12,7 +11,7 @@ namespace UberPopug.TaskTrackerService
         {
         }
 
-        public DbSet<Task> Tasks { get; set; }
+        public DbSet<TrackerTask> Tasks { get; set; }
         public DbSet<User> Users { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -25,10 +24,13 @@ namespace UberPopug.TaskTrackerService
             modelBuilder.Entity<User>().HasKey(u => u.Email);
             modelBuilder.Entity<User>().Property(u => u.Email).HasMaxLength(50);
 
-            modelBuilder.Entity<Task>().HasKey(u => u.Id);
-            modelBuilder.Entity<Task>().Property(u => u.Description).IsRequired();
+            modelBuilder.Entity<TrackerTask>().ToTable("Tasks");
+            modelBuilder.Entity<TrackerTask>().HasKey(u => u.Id);
+            modelBuilder.Entity<TrackerTask>().Property(u => u.PublicId).IsRequired();
+            modelBuilder.Entity<TrackerTask>().HasIndex(u => u.PublicId).IsUnique();
+            modelBuilder.Entity<TrackerTask>().Property(u => u.Title).IsRequired();
 
-            modelBuilder.Entity<Task>()
+            modelBuilder.Entity<TrackerTask>()
                 .HasOne(t => t.User)
                 .WithMany()
                 .HasForeignKey(f => f.AssignedToEmail);

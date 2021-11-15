@@ -1,4 +1,4 @@
-@model UberPopug.TaskTrackerService.Tasks.Task
+@model UberPopug.TaskTrackerService.Tasks.TrackerTask
 
 @{
     ViewBag.Title = "Tracker - new task";
@@ -8,8 +8,11 @@
 <h2>New task</h2>
 <form>
     <div class="form-group">
-        <label for="exampleInputEmail1">Description</label>
-        <input asp-for="Description" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter description">
+        <label for="title">Title</label>
+        <input asp-for="Title" type="text" class="form-control" id="title" aria-describedby="emailHelp" placeholder="Enter description">
+
+        <label for="jiraId">Jira Id</label>
+        <input asp-for="JiraId" type="text" class="form-control" id="jiraId" aria-describedby="emailHelp" placeholder="Enter description">
     </div>
     <button type="submit" asp-controller="Tasks" asp-action="Create" class="btn btn-primary">Create</button>
 </form>

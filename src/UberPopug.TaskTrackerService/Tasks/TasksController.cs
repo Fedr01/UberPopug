@@ -41,14 +41,14 @@ namespace UberPopug.TaskTrackerService.Tasks
             return RedirectToAction("Index");
         }
 
-        [Authorize(Roles = "Admin")]
+      //  [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AssignTasks()
         {
             var tasks = await _tasksManager.AssignAllAsync();
             return View("Index", tasks);
         }
-
-        public async System.Threading.Tasks.Task Logout()
+        
+        public async Task Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);

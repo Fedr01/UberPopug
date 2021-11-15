@@ -1,8 +1,4 @@
-﻿// Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
-
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using IdentityServer4.Models;
 
 namespace UberPopug.AuthService
@@ -10,6 +6,7 @@ namespace UberPopug.AuthService
     public static class Config
     {
         public static string TrackerUrl = "https://localhost:5010";
+        public static string AccountingUrl = "https://localhost:5020";
 
         public static IEnumerable<IdentityResource> IdentityResources =>
             new IdentityResource[]
@@ -22,7 +19,8 @@ namespace UberPopug.AuthService
         public static IEnumerable<ApiScope> ApiScopes =>
             new ApiScope[]
             {
-                new ApiScope("tracker")
+                new ApiScope("tracker"),
+                new ApiScope("accounting")
             };
 
         public static IEnumerable<Client> Clients =>
@@ -42,6 +40,21 @@ namespace UberPopug.AuthService
 
                     AllowOfflineAccess = true,
                     AllowedScopes = { "openid", "profile", "tracker", "roles" },
+                    RequirePkce = false
+                },
+                new Client
+                {
+                    ClientId = "accounting",
+                    ClientSecrets = { new Secret("accounting-pwd".Sha256()) },
+
+                    AllowedGrantTypes = GrantTypes.Hybrid,
+
+                    RedirectUris = { $"{AccountingUrl}/signin-oidc" },
+                    FrontChannelLogoutUri = $"{AccountingUrl}/signout-oidc",
+                    PostLogoutRedirectUris = { $"{AccountingUrl}/signout-callback-oidc" },
+
+                    AllowOfflineAccess = true,
+                    AllowedScopes = { "openid", "profile", "accounting", "roles" },
                     RequirePkce = false
                 },
             };

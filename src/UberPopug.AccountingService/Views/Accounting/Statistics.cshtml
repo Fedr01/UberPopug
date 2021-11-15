@@ -1,0 +1,16 @@
+@model UberPopug.AccountingService.Controllers.StatisticsViewModel
+
+@{
+    ViewBag.Title = "Tasks";
+    Layout = "_Layout";
+}
+
+<h2>Users accounting statistics</h2>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            Managment earned today: @Model.EarnedMoney
+        </div>
+    </div>
+</div>

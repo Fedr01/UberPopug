@@ -1,15 +1,20 @@
 namespace UberPopug.SchemaRegistry.Schemas.Users
 {
-    public class UserCreatedEvent : Event
+    public class UserCreatedEvent : IEvent
     {
-        public UserCreatedEvent(string email, string role) : base(nameof(UserCreatedEvent), "v1")
+        public UserCreatedEvent(string email, string role)
         {
             Email = email;
             Role = role;
         }
 
-        public string Email { get; private set; }
+        public UserCreatedEvent()
+        {
+        }
 
-        public string Role { get; private set; }
+        public string Email { get; set; }
+        public string Role { get; set; }
+
+        public EventMetaData MetaData { get; set; } = new EventMetaData(nameof(UserCreatedEvent), "v1");
     }
 }

@@ -1,5 +1,7 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using Confluent.SchemaRegistry;
+using Confluent.SchemaRegistry.Serdes;
 using KafkaFlow;
 using KafkaFlow.Serializer;
 using KafkaFlow.TypedHandler;
@@ -20,6 +22,9 @@ using UberPopug.AccountingService.Tasks.Created;
 using UberPopug.AccountingService.Users;
 using UberPopug.Common;
 using UberPopug.Common.Constants;
+using UberPopug.SchemaRegistry.Schemas.Tasks;
+using UberPopug.SchemaRegistry.Schemas.Tasks.Cud;
+using UberPopug.SchemaRegistry.Schemas.Users;
 using AutoOffsetReset = KafkaFlow.AutoOffsetReset;
 
 namespace UberPopug.AccountingService
@@ -87,7 +92,7 @@ namespace UberPopug.AccountingService
                     .AddCluster(
                         cluster => cluster
                             .WithBrokers(new[] { Configuration["Kafka:ClientConfigs:BootstrapServers"] })
-                            //   .WithSchemaRegistry(config => config.Url = "localhost:8081")
+                            .WithSchemaRegistry(config => config.Url = "localhost:8081")
                             .AddConsumer(
                                 consumer => consumer
                                     .Topic(KafkaTopics.UsersStream)
@@ -97,7 +102,8 @@ namespace UberPopug.AccountingService
                                     .WithAutoOffsetReset(AutoOffsetReset.Latest)
                                     .AddMiddlewares(
                                         middlewares => middlewares
-                                            .AddSerializer<NewtonsoftJsonSerializer, KafkaMessageTypeResolver>()
+                                            .AddSchemaRegistryJsonSerializer<UserCreatedEvent>()
+                                            .Add<KafkaLoggingMiddleware>()
                                             .AddTypedHandlers(
                                                 handlers => handlers
                                                     .AddHandler<UserCreatedEventHandler>()
@@ -114,10 +120,11 @@ namespace UberPopug.AccountingService
                                     .WithAutoOffsetReset(AutoOffsetReset.Latest)
                                     .AddMiddlewares(
                                         middlewares => middlewares
-                                            .AddSerializer<NewtonsoftJsonSerializer, KafkaMessageTypeResolver>()
+                                            .AddSchemaRegistryJsonSerializer<TaskCreatedCudEvent>()
+                                            .Add<KafkaLoggingMiddleware>()
                                             .AddTypedHandlers(
                                                 handlers => handlers
-                                                    .AddHandler<TaskCreatedCudEventV2Handler>()
+                                                    .AddHandler<TaskCreatedCudEventHandler>()
                                                     .WithHandlerLifetime(InstanceLifetime.Scoped)
                                             )
                                     )
@@ -131,10 +138,13 @@ namespace UberPopug.AccountingService
                                     .WithAutoOffsetReset(AutoOffsetReset.Latest)
                                     .AddMiddlewares(
                                         middlewares => middlewares
-                                            .AddSerializer<NewtonsoftJsonSerializer, KafkaMessageTypeResolver>()
+                                            .AddSchemaRegistryJsonSerializer<TaskCreatedEventHandler>()
+                                            .AddSchemaRegistryJsonSerializer<TaskCompletedEventHandler>()
+                                            .AddSchemaRegistryJsonSerializer<TaskAssignedEventHandler>()
+                                            .Add<KafkaLoggingMiddleware>()
                                             .AddTypedHandlers(
                                                 handlers => handlers
-                                                    .AddHandler<TaskCreatedEventV2Handler>()
+                                                    .AddHandler<TaskCreatedEventHandler>()
                                                     .WithHandlerLifetime(InstanceLifetime.Scoped)
                                             )
                                             .AddTypedHandlers(
@@ -158,6 +168,8 @@ namespace UberPopug.AccountingService
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AccountingDbContext dataContext,
             IHostApplicationLifetime lifetime)
         {
+            SchemaRegistry.SchemaRegistryUploader.Upload();
+            
             app.UseCookiePolicy(new CookiePolicyOptions
             {
                 MinimumSameSitePolicy = SameSiteMode.Unspecified,

@@ -1,3 +1,5 @@
+using Confluent.SchemaRegistry;
+using Confluent.SchemaRegistry.Serdes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -58,14 +60,20 @@ namespace UberPopug.AuthService
                     .AddCluster(
                         cluster => cluster
                             .WithBrokers(new[] { Configuration["Kafka:ClientConfigs:BootstrapServers"] })
-                            //   .WithSchemaRegistry(config => config.Url = "localhost:8081")
+                            .WithSchemaRegistry(config => config.Url = "localhost:8081")
                             .AddProducer<UserCreatedEvent>(
                                 producer => producer
                                     .DefaultTopic(KafkaTopics.UsersStream)
                                     .AddMiddlewares(middlewares => middlewares
-                                        .AddSerializer<NewtonsoftJsonSerializer, KafkaMessageTypeResolver>()
-                                    ))
-                    ));
+                                        .Add<KafkaLoggingMiddleware>()
+                                        .AddSchemaRegistryJsonSerializer<UserCreatedEvent>(
+                                            new JsonSerializerConfig
+                                            {
+                                                AutoRegisterSchemas = true,
+                                                SubjectNameStrategy = SubjectNameStrategy.Record
+                                            }))
+                            ))
+            );
 
             services.AddControllersWithViews();
 
@@ -79,6 +87,8 @@ namespace UberPopug.AuthService
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AuthDbContext dataContext)
         {
+            SchemaRegistry.SchemaRegistryUploader.Upload();
+
             dataContext.Database.Migrate();
 
             if (env.IsDevelopment())

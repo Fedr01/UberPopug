@@ -45,7 +45,7 @@ namespace UberPopug.AuthService.Account
             IEventService events,
             AuthDbContext dbContext,
             IMessageProducer<UserCreatedEvent> usersProducer)
-          
+
         {
             _interaction = interaction;
             _clientStore = clientStore;
@@ -76,7 +76,7 @@ namespace UberPopug.AuthService.Account
 
             await _usersProducer.ProduceAsync(
                 Guid.NewGuid().ToString(),
-                new UserCreatedEvent(command.Email, command.Role.ToString())
+                new UserCreatedEvent(user.Email, user.Role.ToString())
             );
 
             return View();
@@ -382,5 +382,17 @@ namespace UberPopug.AuthService.Account
 
             return vm;
         }
+    }
+
+    public class Test //: BaseTest
+    {
+        public string TestField { get; set; } = "123";
+
+        public string BaseTestField { get; set; } = "123";
+    }
+
+    public class BaseTest
+    {
+        public string BaseTestField { get; set; } = "123";
     }
 }

@@ -2,30 +2,19 @@ using System;
 
 namespace UberPopug.SchemaRegistry.Schemas.Tasks.Cud
 {
-    public class TaskCreatedCudEvent
+    public class TaskCreatedCudEvent : IEvent
     {
-        public class V1 : Event
+        public TaskCreatedCudEvent(Guid publicId, string title, string jiraId)
         {
-            public Guid PublicId { get; set; }
-
-            public string Description { get; set; }
-
-            public V1() : base(nameof(TaskCreatedCudEvent), "v1")
-            {
-            }
+            PublicId = publicId;
+            Title = title;
+            JiraId = jiraId;
         }
 
-        public class V2 : Event
-        {
-            public Guid PublicId { get; set; }
-            
-            public string Title { get; set; }
+        public Guid PublicId { get; private set; }
+        public string Title { get; private set; }
+        public string JiraId { get; private set; }
 
-            public string JiraId { get; set; }
-
-            public V2() : base(nameof(TaskCreatedCudEvent), "v2")
-            {
-            }
-        }
+        public EventMetaData MetaData { get; set; } = new EventMetaData(nameof(TaskCreatedCudEvent), "v1");
     }
 }

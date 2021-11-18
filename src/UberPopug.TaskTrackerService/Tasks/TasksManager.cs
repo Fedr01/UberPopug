@@ -38,17 +38,12 @@ namespace UberPopug.TaskTrackerService.Tasks
 
             await _context.SaveChangesAsync();
 
-            await _producers[KafkaTopics.TasksStream].ProduceAsync(Guid.NewGuid().ToString(), new TaskCreatedCudEvent.V2
-            {
-                PublicId = task.PublicId,
-                Title = task.Title,
-                JiraId = task.JiraId
-            });
+            await _producers[KafkaTopics.TasksStream].ProduceAsync(Guid.NewGuid().ToString(),
+                new TaskCreatedCudEvent(task.PublicId, task.Title, task.JiraId));
 
-            await _producers[KafkaTopics.Tasks].ProduceAsync(Guid.NewGuid().ToString(), new TaskCreatedEvent.V2
-            {
-                PublicId = task.PublicId
-            });
+
+            await _producers[KafkaTopics.Tasks]
+                .ProduceAsync(Guid.NewGuid().ToString(), new TaskCreatedEvent(task.PublicId));
 
             await AssignAsync(task);
         }
@@ -60,10 +55,8 @@ namespace UberPopug.TaskTrackerService.Tasks
 
             await _context.SaveChangesAsync();
 
-            await _producers[KafkaTopics.Tasks].ProduceAsync(Guid.NewGuid().ToString(), new TaskCompletedEvent
-            {
-                PublicId = task.PublicId
-            });
+            await _producers[KafkaTopics.Tasks]
+                .ProduceAsync(Guid.NewGuid().ToString(), new TaskCompletedEvent(task.PublicId));
         }
 
         public async Task<List<TrackerTask>> AssignAllAsync()
@@ -92,11 +85,8 @@ namespace UberPopug.TaskTrackerService.Tasks
 
             await _context.SaveChangesAsync();
 
-            await _producers[KafkaTopics.Tasks].ProduceAsync(Guid.NewGuid().ToString(), new TaskAssignedEvent
-            {
-                PublicId = trackerTask.PublicId,
-                AssignedToEmail = trackerTask.AssignedToEmail
-            });
+            await _producers[KafkaTopics.Tasks].ProduceAsync(Guid.NewGuid().ToString(),
+                new TaskAssignedEvent(trackerTask.PublicId, trackerTask.AssignedToEmail));
         }
     }
 }

@@ -1,7 +1,10 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using Confluent.SchemaRegistry;
+using Confluent.SchemaRegistry.Serdes;
 using KafkaFlow;
 using KafkaFlow.Serializer;
+using KafkaFlow.Serializer.SchemaRegistry;
 using KafkaFlow.TypedHandler;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -20,6 +23,9 @@ using UberPopug.AccountingService.Tasks.Created;
 using UberPopug.AccountingService.Users;
 using UberPopug.Common;
 using UberPopug.Common.Constants;
+using UberPopug.SchemaRegistry.Schemas.Tasks;
+using UberPopug.SchemaRegistry.Schemas.Tasks.Cud;
+using UberPopug.SchemaRegistry.Schemas.Users;
 using AutoOffsetReset = KafkaFlow.AutoOffsetReset;
 
 namespace UberPopug.AccountingService
@@ -87,7 +93,7 @@ namespace UberPopug.AccountingService
                     .AddCluster(
                         cluster => cluster
                             .WithBrokers(new[] { Configuration["Kafka:ClientConfigs:BootstrapServers"] })
-                            //   .WithSchemaRegistry(config => config.Url = "localhost:8081")
+                            .WithSchemaRegistry(config => config.Url = "localhost:8081")
                             .AddConsumer(
                                 consumer => consumer
                                     .Topic(KafkaTopics.UsersStream)
@@ -97,7 +103,8 @@ namespace UberPopug.AccountingService
                                     .WithAutoOffsetReset(AutoOffsetReset.Latest)
                                     .AddMiddlewares(
                                         middlewares => middlewares
-                                            .AddSerializer<NewtonsoftJsonSerializer, KafkaMessageTypeResolver>()
+                                            .AddSchemaRegistryJsonSerializer<UserCreatedEvent>()
+                                            .Add<KafkaLoggingMiddleware>()
                                             .AddTypedHandlers(
                                                 handlers => handlers
                                                     .AddHandler<UserCreatedEventHandler>()
@@ -114,10 +121,11 @@ namespace UberPopug.AccountingService
                                     .WithAutoOffsetReset(AutoOffsetReset.Latest)
                                     .AddMiddlewares(
                                         middlewares => middlewares
-                                            .AddSerializer<NewtonsoftJsonSerializer, KafkaMessageTypeResolver>()
+                                            .AddSchemaRegistryJsonSerializer<TaskCreatedCudEvent>()
+                                            .Add<KafkaLoggingMiddleware>()
                                             .AddTypedHandlers(
                                                 handlers => handlers
-                                                    .AddHandler<TaskCreatedCudEventV2Handler>()
+                                                    .AddHandler<TaskCreatedCudEventHandler>()
                                                     .WithHandlerLifetime(InstanceLifetime.Scoped)
                                             )
                                     )
@@ -129,27 +137,35 @@ namespace UberPopug.AccountingService
                                     .WithBufferSize(1)
                                     .WithWorkersCount(1)
                                     .WithAutoOffsetReset(AutoOffsetReset.Latest)
+                                    .WithManualStoreOffsets()
                                     .AddMiddlewares(
                                         middlewares => middlewares
-                                            .AddSerializer<NewtonsoftJsonSerializer, KafkaMessageTypeResolver>()
+                                            .AddTypedSchemaRegistryJsonSerializer()
+                                            .Add<KafkaLoggingMiddleware>()
+                                            .Add<KafkaDeadLetterQueueMiddleware>()
                                             .AddTypedHandlers(
                                                 handlers => handlers
-                                                    .AddHandler<TaskCreatedEventV2Handler>()
+                                                    .AddHandler<TaskCreatedEventHandler>()
                                                     .WithHandlerLifetime(InstanceLifetime.Scoped)
-                                            )
-                                            .AddTypedHandlers(
-                                                handlers => handlers
                                                     .AddHandler<TaskCompletedEventHandler>()
                                                     .WithHandlerLifetime(InstanceLifetime.Scoped)
-                                            )
-                                            .AddTypedHandlers(
-                                                handlers => handlers
                                                     .AddHandler<TaskAssignedEventHandler>()
                                                     .WithHandlerLifetime(InstanceLifetime.Scoped)
                                             )
                                     )
                             )
-                    ));
+                            .AddProducer(
+                                KafkaDeadLetterQueueMiddleware.Producer,
+                                producer => producer
+                                    .DefaultTopic(KafkaDeadLetterQueueMiddleware.Topic)
+                                    .AddMiddlewares(middlewares => middlewares
+                                        .AddTypedSchemaRegistryJsonSerializer(
+                                            new JsonSerializerConfig
+                                            {
+                                                SubjectNameStrategy = SubjectNameStrategy.Record
+                                            }))
+                            ))
+                    );
 
             services.AddControllersWithViews();
         }

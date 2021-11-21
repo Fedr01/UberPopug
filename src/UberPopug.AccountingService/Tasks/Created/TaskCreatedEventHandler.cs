@@ -6,16 +6,17 @@ using UberPopug.SchemaRegistry.Schemas.Tasks;
 
 namespace UberPopug.AccountingService.Tasks.Created
 {
-    public class TaskCreatedEventV2Handler : IMessageHandler<TaskCreatedEvent.V2>
+    public class TaskCreatedEventHandler : IMessageHandler<TaskCreatedEvent>
     {
         private readonly AccountingDbContext _dbContext;
 
-        public TaskCreatedEventV2Handler(AccountingDbContext dbContext)
+        public TaskCreatedEventHandler(AccountingDbContext dbContext)
         {
+            
             _dbContext = dbContext;
         }
 
-        public async Task Handle(IMessageContext context, TaskCreatedEvent.V2 message)
+        public async Task Handle(IMessageContext context, TaskCreatedEvent message)
         {
             await TasksCreatedSemaphore.Semaphore.WaitAsync();
 
@@ -28,6 +29,8 @@ namespace UberPopug.AccountingService.Tasks.Created
 
             task.Estimate();
             await _dbContext.SaveChangesAsync();
+            
+            context.ConsumerContext.StoreOffset();
 
             TasksCreatedSemaphore.Semaphore.Release();
         }

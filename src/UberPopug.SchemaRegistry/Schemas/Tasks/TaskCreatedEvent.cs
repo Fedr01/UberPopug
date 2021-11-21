@@ -2,26 +2,15 @@ using System;
 
 namespace UberPopug.SchemaRegistry.Schemas.Tasks
 {
-    public class TaskCreatedEvent
+    public class TaskCreatedEvent : IEvent
     {
-        public class V1 : Event
+        public TaskCreatedEvent(Guid publicId)
         {
-            public Guid PublicId { get; set; }
-
-            public string Description { get; set; }
-
-            public V1() : base(nameof(TaskCreatedEvent), "v1")
-            {
-            }
+            PublicId = publicId;
         }
 
-        public class V2 : Event
-        {
-            public Guid PublicId { get; set; }
+        public Guid PublicId { get; set; }
 
-            public V2() : base(nameof(TaskCreatedEvent), "v2")
-            {
-            }
-        }
+        public EventMetaData MetaData { get; set; } = new EventMetaData(nameof(TaskCreatedEvent), "v1");
     }
 }

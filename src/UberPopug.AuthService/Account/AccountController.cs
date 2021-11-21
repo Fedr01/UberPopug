@@ -45,7 +45,7 @@ namespace UberPopug.AuthService.Account
             IEventService events,
             AuthDbContext dbContext,
             IMessageProducer<UserCreatedEvent> usersProducer)
-          
+
         {
             _interaction = interaction;
             _clientStore = clientStore;
@@ -74,9 +74,9 @@ namespace UberPopug.AuthService.Account
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
 
-            await _usersProducer.ProduceAsync(
+            _usersProducer.Produce(
                 Guid.NewGuid().ToString(),
-                new UserCreatedEvent(command.Email, command.Role.ToString())
+                new UserCreatedEvent(user.Email, user.Role.ToString())
             );
 
             return View();

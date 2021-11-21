@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using KafkaFlow;
 using KafkaFlow.TypedHandler;
@@ -18,11 +19,12 @@ namespace UberPopug.AccountingService.Tasks.Completed
         public async Task Handle(IMessageContext context, TaskCompletedEvent message)
         {
             var task = await _dbContext.Tasks
-                .Include(t => t.User)
+                .Include(t => t.Account)
                 .FirstAsync(t => t.PublicId == message.PublicId);
             
             task.Complete();
             await _dbContext.SaveChangesAsync();
+            context.ConsumerContext.StoreOffset();
         }
     }
 }

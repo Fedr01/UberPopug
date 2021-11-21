@@ -2,12 +2,15 @@ using System;
 
 namespace UberPopug.SchemaRegistry.Schemas.Tasks
 {
-    public class TaskCompletedEvent : Event
+    public class TaskCompletedEvent : IEvent
     {
+        public TaskCompletedEvent(Guid publicId)
+        {
+            PublicId = publicId;
+        }
+
         public Guid PublicId { get; set; }
 
-        public TaskCompletedEvent() : base(nameof(TaskCompletedEvent),"v1")
-        {
-        }
+        public EventMetaData MetaData { get; set; } = new EventMetaData(nameof(TaskCompletedEvent), "v1");
     }
 }

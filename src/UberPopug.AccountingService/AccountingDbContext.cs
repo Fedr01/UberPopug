@@ -33,7 +33,7 @@ namespace UberPopug.AccountingService
             modelBuilder.Entity<TrackerTask>().Property(u => u.Title).IsRequired();
 
             modelBuilder.Entity<TrackerTask>()
-                .HasOne(t => t.User)
+                .HasOne(t => t.Account)
                 .WithMany()
                 .HasForeignKey(f => f.AssignedToEmail);
 

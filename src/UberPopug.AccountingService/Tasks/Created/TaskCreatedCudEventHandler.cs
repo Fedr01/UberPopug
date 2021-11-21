@@ -6,17 +6,17 @@ using UberPopug.SchemaRegistry.Schemas.Tasks.Cud;
 
 namespace UberPopug.AccountingService.Tasks.Created
 {
-    public class TaskCreatedCudEventV2Handler : IMessageHandler<TaskCreatedCudEvent.V2>
+    public class TaskCreatedCudEventHandler : IMessageHandler<TaskCreatedCudEvent>
     {
         private readonly AccountingDbContext _dbContext;
 
 
-        public TaskCreatedCudEventV2Handler(AccountingDbContext dbContext)
+        public TaskCreatedCudEventHandler(AccountingDbContext dbContext)
         {
             _dbContext = dbContext;
         }
 
-        public async Task Handle(IMessageContext context, TaskCreatedCudEvent.V2 message)
+        public async Task Handle(IMessageContext context, TaskCreatedCudEvent message)
         {
             await TasksCreatedSemaphore.Semaphore.WaitAsync();
 

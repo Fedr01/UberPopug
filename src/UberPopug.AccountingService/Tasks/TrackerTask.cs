@@ -24,7 +24,7 @@ namespace UberPopug.AccountingService.Tasks
 
         public TaskStatus Status { get; private set; }
 
-        public User User { get; private set; }
+        public User Account { get; private set; }
 
         public string AssignedToEmail { get; private set; }
 
@@ -57,7 +57,7 @@ namespace UberPopug.AccountingService.Tasks
             }
             
             Status = TaskStatus.ProsoVMiske;
-            User.ApplyTransaction(new Transaction(User.Email, Id, AssignPrice, TransactionType.Debit));
+            Account.ApplyTransaction(new Transaction(Account.Email, Id, AssignPrice, TransactionType.Debit));
         }
 
         public void Estimate()

@@ -84,17 +84,17 @@ namespace UberPopug.IntegartionTests
 
 
             var accTask = await _webApp.AccountingDbContext.Tasks
-                .Include(t => t.User)
+                .Include(t => t.Account)
                 .FirstOrDefaultAsync(t => t.AssignedToEmail != null);
 
-            var oldBalance = accTask.User.Balance;
+            var oldBalance = accTask.Account.Balance;
             var task = await _webApp.TrackerDbContext.Tasks.FirstOrDefaultAsync(t => t.PublicId == accTask.PublicId);
 
             var response = await _webApp.Client.GetAsync($"/Tasks/Complete?taskId={task.Id}");
 
-            await _webApp.AccountingDbContext.Entry(accTask.User).ReloadAsync();
+            await _webApp.AccountingDbContext.Entry(accTask.Account).ReloadAsync();
 
-            accTask.User.Balance.ShouldNotBe(oldBalance);
+            accTask.Account.Balance.ShouldNotBe(oldBalance);
         }
     }
 }

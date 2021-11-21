@@ -5,6 +5,10 @@ namespace UberPopug.SchemaRegistry.Schemas
 {
     public class EventMetaData
     {
+        public EventMetaData()
+        {
+            
+        }
         public EventMetaData(string eventName, string version)
         {
             EventId = Guid.NewGuid();

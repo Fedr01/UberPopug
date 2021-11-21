@@ -1,4 +1,5 @@
 ﻿@using UberPopug.AuthService.Users
+@using UberPopug.TaskTrackerService
 @{
 
 }
@@ -30,10 +31,10 @@
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
                 <li>
-                    <a href="@UberPopug.AuthService.Config.TrackerUrl">Tracker</a>
+                    <a href="@EnvironmentConfig.TrackerUrl">Tracker</a>
                 </li>
                 <li>
-                    <a href="@UberPopug.AuthService.Config.AccountingUrl">Accounting</a>
+                    <a href="@EnvironmentConfig.AccountingUrl">Accounting</a>
                 </li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>

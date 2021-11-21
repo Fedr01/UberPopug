@@ -18,6 +18,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using UberPopug.Common;
 using UberPopug.Common.Constants;
+using UberPopug.SchemaRegistry.Schemas.Tasks;
+using UberPopug.SchemaRegistry.Schemas.Tasks.Cud;
 using UberPopug.SchemaRegistry.Schemas.Users;
 using UberPopug.TaskTrackerService.Tasks;
 using UberPopug.TaskTrackerService.Users;
@@ -91,28 +93,52 @@ namespace UberPopug.TaskTrackerService
                         cluster => cluster
                             .WithBrokers(new[] { Configuration["Kafka:ClientConfigs:BootstrapServers"] })
                             .WithSchemaRegistry(config => config.Url = "localhost:8081")
-                            .AddProducer(
-                                KafkaTopics.TasksStream,
+                            .AddProducer<TaskCreatedCudEvent>(
                                 producer => producer
                                     .DefaultTopic(KafkaTopics.TasksStream)
                                     .AddMiddlewares(middlewares => middlewares
                                         .Add<KafkaLoggingMiddleware>()
-                                        .AddSchemaRegistryJsonSerializer<UserCreatedEvent>(
+                                        .AddSchemaRegistryJsonSerializer<TaskCreatedCudEvent>(
                                             new JsonSerializerConfig
                                             {
-                                                SubjectNameStrategy = SubjectNameStrategy.Record
+                                                SubjectNameStrategy = SubjectNameStrategy.Record,
+                                                AutoRegisterSchemas = false
                                             }))
                             )
-                            .AddProducer(
-                                KafkaTopics.Tasks,
+                            .AddProducer<TaskCreatedEvent>(
                                 producer => producer
                                     .DefaultTopic(KafkaTopics.Tasks)
                                     .AddMiddlewares(middlewares => middlewares
                                         .Add<KafkaLoggingMiddleware>()
-                                        .AddSchemaRegistryJsonSerializer<UserCreatedEvent>(
+                                        .AddTypedSchemaRegistryJsonSerializer(
                                             new JsonSerializerConfig
                                             {
-                                                SubjectNameStrategy = SubjectNameStrategy.Record
+                                                SubjectNameStrategy = SubjectNameStrategy.Record,
+                                                AutoRegisterSchemas = false
+                                            }))
+                            )
+                            .AddProducer<TaskCompletedEvent>(
+                                producer => producer
+                                    .DefaultTopic(KafkaTopics.Tasks)
+                                    .AddMiddlewares(middlewares => middlewares
+                                        .Add<KafkaLoggingMiddleware>()
+                                        .AddTypedSchemaRegistryJsonSerializer(
+                                            new JsonSerializerConfig
+                                            {
+                                                SubjectNameStrategy = SubjectNameStrategy.Record,
+                                                AutoRegisterSchemas = false
+                                            }))
+                            )
+                            .AddProducer<TaskAssignedEvent>(
+                                producer => producer
+                                    .DefaultTopic(KafkaTopics.Tasks)
+                                    .AddMiddlewares(middlewares => middlewares
+                                        .Add<KafkaLoggingMiddleware>()
+                                        .AddTypedSchemaRegistryJsonSerializer(
+                                            new JsonSerializerConfig
+                                            {
+                                                SubjectNameStrategy = SubjectNameStrategy.Record,
+                                                AutoRegisterSchemas = false
                                             }))
                             )
                             .AddConsumer(
@@ -142,8 +168,6 @@ namespace UberPopug.TaskTrackerService
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, TaskTrackerDbContext dataContext,
             IHostApplicationLifetime lifetime)
         {
-            SchemaRegistry.SchemaRegistryUploader.Upload();
-            
             app.UseCookiePolicy(new CookiePolicyOptions
             {
                 MinimumSameSitePolicy = SameSiteMode.Unspecified,

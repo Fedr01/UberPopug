@@ -1,13 +1,11 @@
 ﻿using System.Collections.Generic;
 using IdentityServer4.Models;
+using UberPopug.TaskTrackerService;
 
 namespace UberPopug.AuthService
 {
-    public static class Config
+    public static class AuthConfig
     {
-        public static string TrackerUrl = "https://localhost:5010";
-        public static string AccountingUrl = "https://localhost:5020";
-
         public static IEnumerable<IdentityResource> IdentityResources =>
             new IdentityResource[]
             {
@@ -34,9 +32,9 @@ namespace UberPopug.AuthService
 
                     AllowedGrantTypes = GrantTypes.Hybrid,
 
-                    RedirectUris = { $"{TrackerUrl}/signin-oidc" },
-                    FrontChannelLogoutUri = $"{TrackerUrl}/signout-oidc",
-                    PostLogoutRedirectUris = { $"{TrackerUrl}/signout-callback-oidc" },
+                    RedirectUris = { $"{EnvironmentConfig.TrackerUrl}/signin-oidc" },
+                    FrontChannelLogoutUri = $"{EnvironmentConfig.TrackerUrl}/signout-oidc",
+                    PostLogoutRedirectUris = { $"{EnvironmentConfig.TrackerUrl}/signout-callback-oidc" },
 
                     AllowOfflineAccess = true,
                     AllowedScopes = { "openid", "profile", "tracker", "roles" },
@@ -49,9 +47,9 @@ namespace UberPopug.AuthService
 
                     AllowedGrantTypes = GrantTypes.Hybrid,
 
-                    RedirectUris = { $"{AccountingUrl}/signin-oidc" },
-                    FrontChannelLogoutUri = $"{AccountingUrl}/signout-oidc",
-                    PostLogoutRedirectUris = { $"{AccountingUrl}/signout-callback-oidc" },
+                    RedirectUris = { $"{EnvironmentConfig.AccountingUrl}/signin-oidc" },
+                    FrontChannelLogoutUri = $"{EnvironmentConfig.AccountingUrl}/signout-oidc",
+                    PostLogoutRedirectUris = { $"{EnvironmentConfig.AccountingUrl}/signout-callback-oidc" },
 
                     AllowOfflineAccess = true,
                     AllowedScopes = { "openid", "profile", "accounting", "roles" },

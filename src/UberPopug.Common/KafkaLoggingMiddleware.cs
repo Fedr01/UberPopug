@@ -42,19 +42,7 @@ namespace UberPopug.Common
                     $" at {messageValue?.MetaData.EventTime:G}");
             }
 
-            try
-            {
-                await next(context);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e,
-                    $"Failed to process {messageValue?.MetaData.EventName} {messageValue?.MetaData.Version}" +
-                    $" with id {messageValue?.MetaData.EventId}" +
-                    $" to {topic}" +
-                    $" by {messageValue?.MetaData.Producer}" +
-                    $" at {messageValue?.MetaData.EventTime:G}");
-            }
+            await next(context);
         }
     }
 }

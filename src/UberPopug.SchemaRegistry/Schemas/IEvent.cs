@@ -4,4 +4,9 @@ namespace UberPopug.SchemaRegistry.Schemas
     {
         EventMetaData MetaData { get; set; }
     }
+
+    public class Event : IEvent
+    {
+        public EventMetaData MetaData { get; set; }
+    }
 }

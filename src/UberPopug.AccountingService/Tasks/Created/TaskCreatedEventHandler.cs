@@ -12,6 +12,7 @@ namespace UberPopug.AccountingService.Tasks.Created
 
         public TaskCreatedEventHandler(AccountingDbContext dbContext)
         {
+            
             _dbContext = dbContext;
         }
 
@@ -28,6 +29,8 @@ namespace UberPopug.AccountingService.Tasks.Created
 
             task.Estimate();
             await _dbContext.SaveChangesAsync();
+            
+            context.ConsumerContext.StoreOffset();
 
             TasksCreatedSemaphore.Semaphore.Release();
         }

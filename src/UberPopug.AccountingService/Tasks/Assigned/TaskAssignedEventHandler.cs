@@ -22,6 +22,7 @@ namespace UberPopug.AccountingService.Tasks.Assigned
 
             task.AssignTo(user);
             await _dbContext.SaveChangesAsync();
+            context.ConsumerContext.StoreOffset();
         }
     }
 }

@@ -74,7 +74,7 @@ namespace UberPopug.AuthService.Account
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
 
-            await _usersProducer.ProduceAsync(
+            _usersProducer.Produce(
                 Guid.NewGuid().ToString(),
                 new UserCreatedEvent(user.Email, user.Role.ToString())
             );
@@ -382,17 +382,5 @@ namespace UberPopug.AuthService.Account
 
             return vm;
         }
-    }
-
-    public class Test //: BaseTest
-    {
-        public string TestField { get; set; } = "123";
-
-        public string BaseTestField { get; set; } = "123";
-    }
-
-    public class BaseTest
-    {
-        public string BaseTestField { get; set; } = "123";
     }
 }

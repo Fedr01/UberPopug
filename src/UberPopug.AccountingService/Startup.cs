@@ -4,6 +4,7 @@ using Confluent.SchemaRegistry;
 using Confluent.SchemaRegistry.Serdes;
 using KafkaFlow;
 using KafkaFlow.Serializer;
+using KafkaFlow.Serializer.SchemaRegistry;
 using KafkaFlow.TypedHandler;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -136,30 +137,35 @@ namespace UberPopug.AccountingService
                                     .WithBufferSize(1)
                                     .WithWorkersCount(1)
                                     .WithAutoOffsetReset(AutoOffsetReset.Latest)
+                                    .WithManualStoreOffsets()
                                     .AddMiddlewares(
                                         middlewares => middlewares
-                                            .AddSchemaRegistryJsonSerializer<TaskCreatedEventHandler>()
-                                            .AddSchemaRegistryJsonSerializer<TaskCompletedEventHandler>()
-                                            .AddSchemaRegistryJsonSerializer<TaskAssignedEventHandler>()
+                                            .AddTypedSchemaRegistryJsonSerializer()
                                             .Add<KafkaLoggingMiddleware>()
+                                            .Add<KafkaDeadLetterQueueMiddleware>()
                                             .AddTypedHandlers(
                                                 handlers => handlers
                                                     .AddHandler<TaskCreatedEventHandler>()
                                                     .WithHandlerLifetime(InstanceLifetime.Scoped)
-                                            )
-                                            .AddTypedHandlers(
-                                                handlers => handlers
                                                     .AddHandler<TaskCompletedEventHandler>()
                                                     .WithHandlerLifetime(InstanceLifetime.Scoped)
-                                            )
-                                            .AddTypedHandlers(
-                                                handlers => handlers
                                                     .AddHandler<TaskAssignedEventHandler>()
                                                     .WithHandlerLifetime(InstanceLifetime.Scoped)
                                             )
                                     )
                             )
-                    ));
+                            .AddProducer(
+                                KafkaDeadLetterQueueMiddleware.Producer,
+                                producer => producer
+                                    .DefaultTopic(KafkaDeadLetterQueueMiddleware.Topic)
+                                    .AddMiddlewares(middlewares => middlewares
+                                        .AddTypedSchemaRegistryJsonSerializer(
+                                            new JsonSerializerConfig
+                                            {
+                                                SubjectNameStrategy = SubjectNameStrategy.Record
+                                            }))
+                            ))
+                    );
 
             services.AddControllersWithViews();
         }
@@ -168,8 +174,6 @@ namespace UberPopug.AccountingService
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AccountingDbContext dataContext,
             IHostApplicationLifetime lifetime)
         {
-            SchemaRegistry.SchemaRegistryUploader.Upload();
-            
             app.UseCookiePolicy(new CookiePolicyOptions
             {
                 MinimumSameSitePolicy = SameSiteMode.Unspecified,

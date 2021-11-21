@@ -13,6 +13,7 @@ using KafkaFlow.Serializer;
 using KafkaFlow.TypedHandler;
 using UberPopug.Common;
 using UberPopug.Common.Constants;
+using UberPopug.Common.Outbox;
 using UberPopug.SchemaRegistry.Schemas.Users;
 
 namespace UberPopug.AuthService
@@ -47,9 +48,9 @@ namespace UberPopug.AuthService
                 .AddProfileService<ProfileService>();
 
             // in-memory, code config
-            builder.AddInMemoryIdentityResources(Config.IdentityResources);
-            builder.AddInMemoryApiScopes(Config.ApiScopes);
-            builder.AddInMemoryClients(Config.Clients);
+            builder.AddInMemoryIdentityResources(AuthConfig.IdentityResources);
+            builder.AddInMemoryApiScopes(AuthConfig.ApiScopes);
+            builder.AddInMemoryClients(AuthConfig.Clients);
 
             // not recommended for production - you need to store your key material somewhere secure
             builder.AddDeveloperSigningCredential();
@@ -61,20 +62,33 @@ namespace UberPopug.AuthService
                         cluster => cluster
                             .WithBrokers(new[] { Configuration["Kafka:ClientConfigs:BootstrapServers"] })
                             .WithSchemaRegistry(config => config.Url = "localhost:8081")
+                            // .AddProducer(
+                            //     "outbox-producer",
+                            //     producer => producer
+                            //         .AddMiddlewares(middlewares => middlewares
+                            //             .Add<KafkaLoggingMiddleware>()
+                            //             .Add<KafkaOutboxMiddleware>()
+                            //             .AddTypedSchemaRegistryJsonSerializer(
+                            //                 new JsonSerializerConfig
+                            //                 {
+                            //                     SubjectNameStrategy = SubjectNameStrategy.Record
+                            //                 }))
+                            // )
                             .AddProducer<UserCreatedEvent>(
                                 producer => producer
                                     .DefaultTopic(KafkaTopics.UsersStream)
                                     .AddMiddlewares(middlewares => middlewares
                                         .Add<KafkaLoggingMiddleware>()
-                                        .AddSchemaRegistryJsonSerializer<UserCreatedEvent>(
+                                        .Add<KafkaOutboxMiddleware>()
+                                        .AddTypedSchemaRegistryJsonSerializer(
                                             new JsonSerializerConfig
                                             {
-                                                AutoRegisterSchemas = true,
                                                 SubjectNameStrategy = SubjectNameStrategy.Record
                                             }))
                             ))
             );
 
+            services.AddHostedService<OutboxService>();
             services.AddControllersWithViews();
 
             services.AddSwaggerGen(c =>
@@ -87,8 +101,6 @@ namespace UberPopug.AuthService
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AuthDbContext dataContext)
         {
-            SchemaRegistry.SchemaRegistryUploader.Upload();
-
             dataContext.Database.Migrate();
 
             if (env.IsDevelopment())

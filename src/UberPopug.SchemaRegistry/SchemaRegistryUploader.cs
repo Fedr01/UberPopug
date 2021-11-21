@@ -41,17 +41,18 @@ namespace UberPopug.SchemaRegistry
 
                 var subject = $"{ev.Name}";
 
+                var delResponse = httpClient.DeleteAsync($"http://localhost:8081/subjects/{subject}?permanent=false").Result;
                 var response = httpClient.PostAsync(
                     $"http://localhost:8081/subjects/{subject}/versions",
                     new StringContent(JsonConvert.SerializeObject(request),
                         Encoding.UTF8,
                         "application/vnd.schemaregistry+json")).Result;
-
+                
                 if (response.StatusCode != HttpStatusCode.OK)
                 {
                     throw new Exception($"Failed to upload schema {subject}");
                 }
-
+                
                 var result = response.Content.ReadAsStringAsync().Result;
             }
         }
